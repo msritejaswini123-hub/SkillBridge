@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Create an account{% endblock %}
+
+{% block body %}
+<div class="wrap-narrow">
+  <div class="card">
+    <h1>Create your account</h1>
+    <p class="secondary">Pick the type of account you need. You can only have one role per email.</p>
+
+    <form method="post" novalidate id="register-form">
+      <div class="field">
+        <label>I am a...</label>
+        <div class="role-picker">
+          <label class="role-option">
+            <input type="radio" name="role" value="student" {{ 'checked' if form.get('role', 'student') == 'student' }} data-role="student">
+            <span><span class="role-ico">🎓</span>Student</span>
+          </label>
+          <label class="role-option">
+            <input type="radio" name="role" value="company" {{ 'checked' if form.get('role') == 'company' }} data-role="company">
+            <span><span class="role-ico">🏢</span>Company</span>
+          </label>
+          <label class="role-option">
+            <input type="radio" name="role" value="academia" {{ 'checked' if form.get('role') == 'academia' }} data-role="academia">
+            <span><span class="role-ico">🏛</span>College</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="name">Full name</label>
+        <input type="text" id="name" name="name" value="{{ form.get('name', '') }}" required>
+      </div>
+
+      {# Shown/hidden by static/js/script.js depending on the role chosen #}
+      <div class="field role-field" data-for="company">
+        <label for="company_name">Company name</label>
+        <input type="text" id="company_name" name="company_name" value="{{ form.get('company_name', '') }}">
+      </div>
+      <div class="field role-field" data-for="company">
+        <label for="location">Head office city</label>
+        <input type="text" id="location" name="location" value="{{ form.get('location', '') }}" placeholder="Hyderabad">
+      </div>
+      <div class="field role-field" data-for="academia">
+        <label for="college_name">College / institution name</label>
+        <input type="text" id="college_name" name="college_name" value="{{ form.get('college_name', '') }}">
+      </div>
+
+      <div class="field">
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email" value="{{ form.get('email', '') }}" required autocomplete="email">
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required minlength="6" autocomplete="new-password">
+          <div class="hint">At least 6 characters.</div>
+        </div>
+        <div class="field">
+          <label for="confirm_password">Confirm password</label>
+          <input type="password" id="confirm_password" name="confirm_password" required autocomplete="new-password">
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Create account</button>
+      <p class="hint mt2">Passwords are stored as a salted hash, never as plain text.</p>
+    </form>
+
+    <p class="mt3 center secondary">Already registered? <a href="{{ url_for('login') }}">Log in</a></p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% from "_macros.html" import skill_badges, breakdown_table, match_pill %}
+{% block title %}{{ internship['title'] }}{% endblock %}
+
+{% block content %}
+<p class="tiny"><a href="{{ url_for('internships') }}">← Back to internships</a></p>
+
+<div class="page-head">
+  <div>
+    <h1 class="mb0">{{ internship['title'] }}</h1>
+    <p>
+      <strong>{{ internship['company_name'] }}</strong>
+      {% if internship['industry'] %}&middot; {{ internship['industry'] }}{% endif %}
+      {% if internship['is_demo'] %}<span class="badge badge-demo">Demo listing</span>{% endif %}
+      {% if not internship['is_active'] %}<span class="badge badge-miss">Closed</span>{% endif %}
+    </p>
+  </div>
+  {% if match %}
+    <div class="right">
+      <div class="match-pill match-{{ match.score|score_class }} badge-lg">{{ match.score }}% match</div>
+    </div>
+  {% endif %}
+</div>
+
+<div class="grid grid-2">
+  {# ---------------- left column: the role ---------------- #}
+  <div>
+    <div class="card">
+      <div class="card-head"><h2 class="mb0">Role details</h2></div>
+      <div class="table-scroll">
+        <table class="data">
+          <tbody>
+            <tr><th>Location</th><td>{{ internship['location'] or 'Not specified' }}</td></tr>
+            <tr><th>Stipend</th><td>{{ internship|stipend_range }}</td></tr>
+            <tr><th>Duration</th><td>{{ internship['duration_months'] }} months</td></tr>
+            <tr><th>Qualification</th><td>{{ internship['qualification'] }}</td></tr>
+            <tr><th>Openings</th><td>{{ internship['openings'] }}</td></tr>
+            <tr><th>Applicants</th><td>{{ applicant_count }} so far</td></tr>
+            <tr><th>Domain</th><td>{{ internship['domain'] }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Description</h2>
+      <p class="secondary" style="white-space:pre-line">{{ internship['description'] or 'No description provided.' }}</p>
+    </div>
+
+    <div class="card">
+      <h2>Skills required</h2>
+      {% if skills['required'] %}
+        <h4 class="muted tiny">MUST HAVE</h4>
+        {% if match %}
+          <span class="badge-row">
+            {% for name in skills['required'] %}
+              <span class="badge {{ 'badge-have' if name in match.matched_skills else 'badge-miss' }}">
+                {{ '✓' if name in match.matched_skills else '✗' }} {{ name }}
+              </span>
+            {% endfor %}
+          </span>
+        {% else %}{{ skill_badges(skills['required']) }}{% endif %}
+      {% else %}
+        <p class="secondary">No required skills were listed for this role.</p>
+      {% endif %}
+
+      {% if skills['preferred'] %}
+        <h4 class="muted tiny mt3">NICE TO HAVE <span class="badge badge-cat tiny">counts half</span></h4>
+        {% if match %}
+          <span class="badge-row">
+            {% for name in skills['preferred'] %}
+              <span class="badge {{ 'badge-have' if name in match.matched_skills else 'badge-pref' }}">
+                {{ '✓' if name in match.matched_skills else '○' }} {{ name }}
+              </span>
+            {% endfor %}
+          </span>
+        {% else %}{{ skill_badges(skills['preferred'], 'pref') }}{% endif %}
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h3>About {{ internship['company_name'] }}</h3>
+      <p class="secondary">{{ internship['about'] or 'No company description provided.' }}</p>
+      <p class="tiny muted mb0">
+        {% if internship['hq'] %}Head office: {{ internship['hq'] }}{% endif %}
+        {% if internship['website'] %} &middot; {{ internship['website'] }}{% endif %}
+      </p>
+    </div>
+  </div>
+
+  {# ---------------- right column: the match ---------------- #}
+  <div>
+    {% if match %}
+      <div class="card">
+        <div class="card-head">
+          <h2 class="mb0">Your match</h2>
+          {% if match.ml_score is not none %}
+            <span class="badge" title="Logistic regression trained on synthetic demo data. Used to order your list, not to change this score.">
+              ML shortlist likelihood {{ match.ml_score|round|int }}%
+            </span>
+          {% endif %}
+        </div>
+
+        <div class="match-hero mb3">
+          <div>
+            <div class="hero-number">{{ match.score }}%</div>
+            <div class="tiny muted">weighted match score</div>
+          </div>
+          <div>
+            <div class="badge-row mb1">
+              {% for part in match.breakdown %}
+                <span class="badge {{ 'badge-have' if part.ok else 'badge-miss' }}">
+                  {{ '✓' if part.ok else '✗' }} {{ part.label }}
+                </span>
+              {% endfor %}
+            </div>
+            <div class="tiny muted">Every tick is a factor you already satisfy.</div>
+          </div>
+        </div>
+
+        <h4>Matched skills</h4>
+        {% if match.matched_skills %}
+          <span class="badge-row">
+            {% for name in match.matched_skills %}<span class="badge badge-have">✓ {{ name }}</span>{% endfor %}
+          </span>
+        {% else %}
+          <p class="secondary tiny">None of the listed skills are on your profile yet.</p>
+        {% endif %}
+
+        <h4 class="mt3">Missing skills</h4>
+        {% if match.missing_skills %}
+          <span class="badge-row">
+            {% for name in match.missing_skills %}<span class="badge badge-miss">✗ {{ name }}</span>{% endfor %}
+          </span>
+        {% else %}
+          <p class="mb0"><span class="badge badge-have">✓ You have every skill they asked for</span></p>
+        {% endif %}
+
+        <div class="btn-row mt3">
+          {% if already_applied %}
+            <span class="badge badge-have badge-lg">✓ You have applied</span>
+            <a class="btn" href="{{ url_for('student_applications') }}">Track status</a>
+          {% elif internship['is_active'] %}
+            <form method="post" action="{{ url_for('apply_internship', internship_id=internship['id']) }}" class="inline-form">
+              <button class="btn btn-primary btn-lg" type="submit">Apply now</button>
+            </form>
+          {% else %}
+            <span class="badge badge-miss">This internship is closed</span>
+          {% endif %}
+          <form method="post" action="{{ url_for('save_internship', internship_id=internship['id']) }}" class="inline-form">
+            <button class="btn" type="submit">{{ '★ Saved' if is_saved else '☆ Save for later' }}</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3 class="mb0">Score breakdown</h3>
+          <span class="badge badge-cat">adds up to {{ match.score }}%</span>
+        </div>
+        <div class="table-scroll">{{ breakdown_table(match) }}</div>
+        <p class="chart-note">
+          Points = weight × your score for that factor. Nothing here is hardcoded &mdash;
+          change your preferred location or stipend on your profile and these numbers move.
+        </p>
+      </div>
+
+      {% if courses %}
+        <div class="card">
+          <div class="card-head">
+            <h3 class="mb0">Close the gap</h3>
+            <a class="btn btn-sm" href="{{ url_for('student_skill_gap') }}">Full skill-gap plan</a>
+          </div>
+          <p class="tiny muted">Free resources for the skills this role wants that you do not have yet.</p>
+          <div class="table-scroll">
+            <table class="data">
+              <thead><tr><th>Skill</th><th>Course</th><th>Provider</th><th>Level</th><th>Time</th></tr></thead>
+              <tbody>
+                {% for course in courses %}
+                  <tr>
+                    <td><span class="badge badge-miss">{{ course['skill'] }}</span></td>
+                    <td>
+                      {% if course['url'] %}
+                        <a href="{{ course['url'] }}" target="_blank" rel="noopener noreferrer">{{ course['title'] }}</a>
+                      {% else %}{{ course['title'] }}{% endif %}
+                    </td>
+                    <td class="secondary">{{ course['provider'] }}</td>
+                    <td>{{ course['level'] }}</td>
+                    <td class="nowrap">{{ course['duration'] }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+
+    {% elif user_role == 'student' %}
+      <div class="card">
+        <div class="empty">
+          <span class="empty-ico">🏷</span>
+          <h3>Add your skills to see your match</h3>
+          <p>We need your skill list before we can score this role for you.</p>
+          <a class="btn btn-primary mt2" href="{{ url_for('student_resume') }}">Upload resume</a>
+        </div>
+      </div>
+    {% else %}
+      <div class="card">
+        <div class="empty">
+          <span class="empty-ico">🎯</span>
+          <h3>See your personal match score</h3>
+          <p>Log in as a student to see matched skills, missing skills and your weighted score for this role.</p>
+          <a class="btn btn-primary mt2" href="{{ url_for('login') }}">Log in</a>
+          <a class="btn mt2" href="{{ url_for('register') }}">Register</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "dash_base.html" %}
+{% from "_macros.html" import job_card, sort_toggle %}
+{% block title %}Recommended internships{% endblock %}
+
+{% block dash %}
+<div class="page-head">
+  <div>
+    <h1>Recommended for you</h1>
+    <p>
+      Ranked using your {{ skills|length }} skills,
+      {{ profile['qualification'] or 'no qualification set' }}{% if profile['branch'] %} {{ profile['branch'] }}{% endif %},
+      preferred location <strong>{{ profile['preferred_location'] or 'any' }}</strong>
+      and a stipend range of
+      <strong>Rs {{ profile['min_stipend']|rupees }}–{{ profile['max_stipend']|rupees }}</strong>.
+    </p>
+  </div>
+  <a class="btn" href="{{ url_for('student_profile') }}">Change preferences</a>
+</div>
+
+{% if not skills %}
+  <div class="empty">
+    <span class="empty-ico">🏷</span>
+    <h3>Add your skills first</h3>
+    <p>Skills are 50% of the match score, so we cannot rank anything yet.</p>
+    <a class="btn btn-primary mt2" href="{{ url_for('student_resume') }}">Upload resume</a>
+    <a class="btn mt2" href="{{ url_for('student_skills') }}">Add skills manually</a>
+  </div>
+{% else %}
+
+  <div class="callout">
+    <strong>How the score is built:</strong>
+    skills {{ (weights.skills * 100)|int }}% &middot;
+    qualification {{ (weights.qualification * 100)|int }}% &middot;
+    location {{ (weights.location * 100)|int }}% &middot;
+    stipend {{ (weights.stipend * 100)|int }}% &middot;
+    experience {{ (weights.experience * 100)|int }}%.
+    Open any internship to see the full arithmetic.
+    <a href="{{ url_for('ml_info') }}">Read more →</a>
+  </div>
+
+  {% include "_filters.html" %}
+
+  <div class="filter-summary">
+    <strong>{{ cards|length }}</strong> internship{{ '' if cards|length == 1 else 's' }} ranked by match score
+    {% if cards %}
+      <span class="badge badge-cat">best match {{ cards[0].match.score }}%</span>
+    {% endif %}
+  </div>
+
+  {{ sort_toggle(sort_by, sort_options) }}
+
+  <div class="grid grid-cards">
+    {% for card in cards %}{{ job_card(card) }}{% endfor %}
+  </div>
+
+  {% if not cards %}
+    <div class="empty">
+      <span class="empty-ico">🔍</span>
+      <h3>Nothing matches those filters</h3>
+      <p>Try clearing the filters, or widen your stipend range on your profile.</p>
+      <a class="btn mt2" href="{{ url_for('student_recommendations') }}">Clear filters</a>
+    </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

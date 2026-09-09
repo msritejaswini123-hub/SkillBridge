@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_macros.html" import job_card %}
+{% block title %}All internships{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>All internships</h1>
+    <p>
+      {% if profile %}
+        Every active internship, ordered by how well it matches your profile.
+      {% else %}
+        Browse every active internship. <a href="{{ url_for('login') }}">Log in as a student</a>
+        to see your personal match score on each one.
+      {% endif %}
+    </p>
+  </div>
+  {% if user_role == 'student' %}
+    <a class="btn btn-primary" href="{{ url_for('student_recommendations') }}">★ My recommendations</a>
+  {% endif %}
+</div>
+
+{% include "_filters.html" %}
+
+<div class="filter-summary">
+  <strong>{{ cards|length }}</strong> internship{{ '' if cards|length == 1 else 's' }} found
+  {% if filters.q %}<span class="badge badge-cat">search: {{ filters.q }}</span>{% endif %}
+  {% if filters.location %}<span class="badge badge-cat">{{ filters.location }}</span>{% endif %}
+  {% if filters.domain %}<span class="badge badge-cat">{{ filters.domain }}</span>{% endif %}
+  {% if filters.skill %}<span class="badge badge-cat">needs {{ filters.skill }}</span>{% endif %}
+  {% if filters.min_stipend %}<span class="badge badge-cat">Rs {{ filters.min_stipend|rupees }}+</span>{% endif %}
+</div>
+
+<div class="grid grid-cards">
+  {% for card in cards %}{{ job_card(card) }}{% endfor %}
+</div>
+
+{% if not cards %}
+  <div class="empty">
+    <span class="empty-ico">🔍</span>
+    <h3>No internships match those filters</h3>
+    <p>Try a broader search.</p>
+    <a class="btn mt2" href="{{ url_for('internships') }}">Clear all filters</a>
+  </div>
+{% endif %}
+{% endblock %}

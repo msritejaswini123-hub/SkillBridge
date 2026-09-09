@@ -1,0 +1,189 @@
+{# ==========================================================================
+   Reusable pieces used across pages: skill badges, match pill, internship card,
+   score breakdown table, chart rows.
+   ========================================================================== #}
+
+{% macro skill_badges(names, kind='skill', limit=0) %}
+  {% set shown = names[:limit] if limit else names %}
+  <span class="badge-row">
+    {% for name in shown %}<span class="badge badge-{{ kind }}">{{ name }}</span>{% endfor %}
+    {% if limit and names|length > limit %}
+      <span class="badge badge-cat">+{{ names|length - limit }} more</span>
+    {% endif %}
+  </span>
+{% endmacro %}
+
+
+{% macro match_pill(match, show_ml=true) %}
+  {% if match %}
+    <span class="match-pill match-{{ match.score|score_class }}"
+          title="Rule-based score: {{ match.rule_score }}%{% if match.ml_score is not none %} | ML shortlist likelihood: {{ match.ml_score }}%{% endif %}">
+      {{ match.score }}%<small>match</small>
+    </span>
+    {% if show_ml and match.ml_score is not none %}
+      <span class="badge tiny" title="Logistic-regression probability, trained on synthetic demo data. Used to order the list.">
+        ML {{ match.ml_score|round|int }}%
+      </span>
+    {% endif %}
+  {% endif %}
+{% endmacro %}
+
+
+{% macro status_badge(status) %}
+  <span class="badge status status-{{ status|lower|replace(' ', '-') }}">{{ status }}</span>
+{% endmacro %}
+
+
+{% macro meter(percent, severity='') %}
+  <div class="meter">
+    <div class="meter-fill {{ 'is-' ~ severity if severity }}"
+         style="width: {{ [[percent|float, 0]|max, 100]|min }}%"></div>
+  </div>
+{% endmacro %}
+
+
+{% macro job_card(card, show_actions=true) %}
+  {% set job = card.internship %}
+  {% set match = card.match %}
+  <article class="job">
+    <div class="job-top">
+      <div>
+        <h3 class="job-title"><a href="{{ url_for('internship_detail', internship_id=job['id']) }}">{{ job['title'] }}</a></h3>
+        <div class="job-company">
+          {{ job['company_name'] }}
+          {% if job['is_demo'] %}<span class="badge badge-demo tiny">Demo</span>{% endif %}
+        </div>
+      </div>
+      <div class="right">{{ match_pill(match) }}</div>
+    </div>
+
+    <div class="job-meta">
+      <span>📍 {{ job['location'] or 'Not specified' }}</span>
+      <span>💰 {{ job|stipend_range }}</span>
+      <span>🗓 {{ job['duration_months'] }} months</span>
+      <span>🎓 {{ job['qualification'] }}</span>
+    </div>
+
+    {% if card.skills and card.skills.get('required') %}
+      <div>
+        <div class="job-skilline mb1">Required skills</div>
+        {% if match %}
+          <span class="badge-row">
+            {% for name in card.skills['required'] %}
+              <span class="badge {{ 'badge-have' if name in match.matched_skills else 'badge-miss' }}">
+                {{ '✓' if name in match.matched_skills else '✗' }} {{ name }}
+              </span>
+            {% endfor %}
+          </span>
+        {% else %}
+          {{ skill_badges(card.skills['required'], 'skill', 6) }}
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if match and match.missing_skills %}
+      <div class="tiny muted">Skill gap: {{ match.missing_skills|join(', ') }}</div>
+    {% endif %}
+
+    {% if show_actions %}
+      <div class="job-foot">
+        <a class="btn btn-sm" href="{{ url_for('internship_detail', internship_id=job['id']) }}">View details</a>
+        {% if user_role == 'student' %}
+          {% if card.applied %}
+            <span class="badge badge-have">✓ Applied</span>
+          {% else %}
+            <form method="post" action="{{ url_for('apply_internship', internship_id=job['id']) }}" class="inline-form">
+              <button class="btn btn-sm btn-primary" type="submit">Apply</button>
+            </form>
+          {% endif %}
+          <form method="post" action="{{ url_for('save_internship', internship_id=job['id']) }}" class="inline-form">
+            <button class="btn btn-sm btn-ghost" type="submit">{{ '★ Saved' if card.saved else '☆ Save' }}</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endif %}
+  </article>
+{% endmacro %}
+
+
+{% macro breakdown_table(match) %}
+  <table class="breakdown">
+    <thead>
+      <tr>
+        <th>Factor</th><th>Weight</th><th>Your score</th>
+        <th class="bar-cell"></th><th class="num">Points</th><th>Why</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for part in match.breakdown %}
+        <tr>
+          <td><strong>{{ part.label }}</strong></td>
+          <td class="num">{{ part.weight }}%</td>
+          <td class="num">{{ part.percent }}%</td>
+          <td class="bar-cell">{{ meter(part.percent, 'good' if part.ok else 'warning') }}</td>
+          <td class="num">{{ part.points }}</td>
+          <td class="secondary">{{ part.detail }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td>Total match</td><td class="num">100%</td><td></td><td></td>
+        <td class="num">{{ match.rule_score }}</td>
+        <td>= the {{ match.score }}% shown above</td>
+      </tr>
+    </tfoot>
+  </table>
+{% endmacro %}
+
+
+{# Sort toggle. The ML ordering is never applied silently - the user picks it,
+   because sorting by the blended key while showing the rule score would look
+   like the list was out of order. #}
+{% macro sort_toggle(sort_by, sort_options, ml_available=true) %}
+  <div class="filter-summary">
+    <span class="tiny muted">Sort by</span>
+    {% for key, meta in sort_options.items() %}
+      {% set args = dict(request.args) %}
+      {% set _ = args.update({'sort': key}) %}
+      <a class="btn btn-sm {{ 'btn-primary' if sort_by == key }}"
+         href="{{ url_for(request.endpoint, **dict(request.view_args, **args)) }}"
+         title="{{ meta[1] }}">{{ meta[0] }}</a>
+    {% endfor %}
+    <span class="tiny muted">{{ sort_options[sort_by][1] }}</span>
+  </div>
+{% endmacro %}
+
+
+{% macro demand_supply_chart(rows, note='') %}
+  <div class="chart">
+    <div class="chart-legend">
+      <span class="key"><i class="swatch swatch-demand"></i> Industry demand (% of internships)</span>
+      <span class="key"><i class="swatch swatch-supply"></i> Student availability (% of students)</span>
+    </div>
+    {% for row in rows %}
+      <div class="chart-row">
+        <div class="chart-label">
+          {{ row.skill }}<small>{{ row.category }}</small>
+        </div>
+        <div class="chart-bars">
+          <div class="track" title="{{ row.skill }}: asked for by {{ row.demand_count }} internships ({{ row.demand_percent }}%)">
+            <div class="track-fill fill-demand" style="width: {{ row.demand_percent }}%"></div>
+          </div>
+          <div class="track" title="{{ row.skill }}: held by {{ row.supply_count }} students ({{ row.supply_percent }}%)">
+            <div class="track-fill fill-supply" style="width: {{ row.supply_percent }}%"></div>
+          </div>
+        </div>
+        <div class="chart-value">
+          {{ row.demand_percent }}% / {{ row.supply_percent }}%<br>
+          {% if row.gap > 0 %}
+            <span class="flag flag-{{ row.severity }}">▲ {{ row.gap }} gap</span>
+          {% else %}
+            <span class="flag flag-good">✓ covered</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+    {% if note %}<p class="chart-note">{{ note }}</p>{% endif %}
+  </div>
+{% endmacro %}

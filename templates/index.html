@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% from "_macros.html" import job_card, skill_badges %}
+{% block title %}Skill mapping, internships and placements{% endblock %}
+
+{% block body %}
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <span class="badge badge-skill">Academia &harr; Industry collaboration portal</span>
+      <h1 class="mt2">Turn a resume into the right internship.</h1>
+      <p class="lede">
+        Students upload a resume, SkillBridge extracts their skills, and combines them with
+        qualification, preferred location and expected stipend to recommend internships -
+        with a transparent match score that shows exactly why.
+        Companies get ranked candidates. Colleges get the skill-gap data they need.
+      </p>
+      <div class="btn-row mt3">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('register') }}">Get started free</a>
+        <a class="btn btn-lg" href="{{ url_for('internships') }}">Browse {{ stats.internships }} internships</a>
+      </div>
+      <p class="tiny muted mt2">
+        Demo logins &mdash; student <strong>rahul@demo.com</strong> &middot;
+        company <strong>hr@technova.com</strong> &middot;
+        college <strong>dean@cvr.edu.in</strong> &middot; password <strong>demo1234</strong>
+      </p>
+    </div>
+
+    <div class="hero-flow">
+      <h3>How it works</h3>
+      <div class="flow-step"><span class="flow-num">1</span><div><strong>Upload your resume</strong><br><span class="secondary tiny">PDF text is extracted and matched against a {{ stats.skills_tracked }}-skill dictionary</span></div></div>
+      <div class="flow-step"><span class="flow-num">2</span><div><strong>Review your skills</strong><br><span class="secondary tiny">You confirm or edit everything before it is saved</span></div></div>
+      <div class="flow-step"><span class="flow-num">3</span><div><strong>Add location &amp; stipend</strong><br><span class="secondary tiny">Preferred city and the range you expect</span></div></div>
+      <div class="flow-step"><span class="flow-num">4</span><div><strong>Get ranked internships</strong><br><span class="secondary tiny">50% skills, 20% qualification, 15% location, 10% stipend, 5% experience</span></div></div>
+      <div class="flow-step"><span class="flow-num">5</span><div><strong>See your skill gaps</strong><br><span class="secondary tiny">Missing skills plus free courses to close them</span></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="tiles mb3">
+    <div class="tile"><span class="tile-label">Live internships</span><div class="tile-value">{{ stats.internships }}</div><div class="tile-foot">{{ stats.openings }} total openings</div></div>
+    <div class="tile"><span class="tile-label">Companies hiring</span><div class="tile-value">{{ stats.companies }}</div><div class="tile-foot">across 7 cities + remote</div></div>
+    <div class="tile"><span class="tile-label">Students onboard</span><div class="tile-value">{{ stats.students }}</div><div class="tile-foot">{{ stats.students_with_skills }} with a skill profile</div></div>
+    <div class="tile"><span class="tile-label">Skills tracked</span><div class="tile-value">{{ stats.skills_tracked }}</div><div class="tile-foot">{{ stats.courses }} linked courses</div></div>
+    <div class="tile"><span class="tile-label">Applications</span><div class="tile-value">{{ stats.applications }}</div><div class="tile-foot">{{ stats.selected }} selected so far</div></div>
+  </div>
+
+  <h2>Built for three roles</h2>
+  <div class="role-cards mb3">
+    <div class="role-card">
+      <span class="role-ico">🎓</span>
+      <h3>Students</h3>
+      <ul>
+        <li>Resume PDF &rarr; automatic skill profile</li>
+        <li>Ranked internship recommendations</li>
+        <li>Matched vs missing skills per role</li>
+        <li>Skill-gap plan with free courses</li>
+        <li>Apply and track application status</li>
+      </ul>
+    </div>
+    <div class="role-card">
+      <span class="role-ico">🏢</span>
+      <h3>Industry</h3>
+      <ul>
+        <li>Post internships with required skills</li>
+        <li>Students ranked by match score</li>
+        <li>See exactly why a candidate matched</li>
+        <li>Manage applications end to end</li>
+        <li>Track your most requested skills</li>
+      </ul>
+    </div>
+    <div class="role-card">
+      <span class="role-ico">🏛</span>
+      <h3>Academia</h3>
+      <ul>
+        <li>Industry skill demand, ranked</li>
+        <li>Student skill availability beside it</li>
+        <li>The biggest gaps, flagged by severity</li>
+        <li>Popular domains and stipend levels</li>
+        <li>Placement funnel and branch-wise stats</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-head"><h2>What industry is asking for</h2><span class="badge badge-cat">live from the database</span></div>
+      {% for row in demand %}
+        <div class="meter-row"><span>{{ row.skill }}</span><span class="mono-num">{{ row.percent }}%</span></div>
+        <div class="meter"><div class="meter-fill" style="width: {{ row.percent }}%"></div></div>
+      {% endfor %}
+      <p class="chart-note">Share of the {{ stats.internships }} active internships that list each skill.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Popular domains</h2></div>
+      <div class="table-scroll">
+        <table class="data">
+          <thead><tr><th>Domain</th><th class="num">Roles</th><th class="num">Openings</th><th class="num">Avg stipend</th></tr></thead>
+          <tbody>
+            {% for row in domains %}
+              <tr>
+                <td>{{ row.domain }}</td>
+                <td class="num">{{ row.n_internships }}</td>
+                <td class="num">{{ row.n_openings }}</td>
+                <td class="num">Rs {{ row.avg_stipend|rupees }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-head mt3"><h2>Latest internships</h2><a href="{{ url_for('internships') }}">See all →</a></div>
+  <div class="grid grid-cards">
+    {% for card in cards %}{{ job_card(card, show_actions=false) }}{% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "dash_base.html" %}
+{% block title %}Company profile{% endblock %}
+
+{% block dash %}
+<div class="page-head">
+  <div>
+    <h1>Company profile</h1>
+    <p>Students see this on every internship you post.</p>
+  </div>
+</div>
+
+<div class="card">
+  <form method="post" novalidate>
+    <div class="field">
+      <label for="company_name">Company name *</label>
+      <input type="text" id="company_name" name="company_name" value="{{ company['company_name'] }}" required>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label for="industry">Industry</label>
+        <input type="text" id="industry" name="industry" value="{{ company['industry'] or '' }}"
+               placeholder="IT Services &amp; Product">
+      </div>
+      <div class="field">
+        <label for="location">Head office city</label>
+        <input type="text" id="location" name="location" value="{{ company['location'] or '' }}"
+               placeholder="Hyderabad">
+      </div>
+      <div class="field full">
+        <label for="website">Website</label>
+        <input type="url" id="website" name="website" value="{{ company['website'] or '' }}"
+               placeholder="https://example.com">
+      </div>
+      <div class="field full">
+        <label for="about">About the company</label>
+        <textarea id="about" name="about" rows="5"
+                  placeholder="What you build, how big the team is, what an intern's experience looks like.">{{ company['about'] or '' }}</textarea>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-lg" type="submit">Save profile</button>
+      <a class="btn" href="{{ url_for('company_dashboard') }}">Back to dashboard</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

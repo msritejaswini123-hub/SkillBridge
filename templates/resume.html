@@ -1,0 +1,84 @@
+{% extends "dash_base.html" %}
+{% from "_macros.html" import skill_badges %}
+{% block title %}Resume upload{% endblock %}
+
+{% block dash %}
+<div class="page-head">
+  <div>
+    <h1>Resume upload</h1>
+    <p>Upload a PDF. We read the text, match it against our skill dictionary, and show you what we found.</p>
+  </div>
+</div>
+
+<div class="card">
+  <form method="post" enctype="multipart/form-data" id="resume-form">
+    <div class="field">
+      <label for="resume">Choose your resume (PDF only, max {{ max_mb }} MB)</label>
+      <input type="file" id="resume" name="resume" accept="application/pdf,.pdf" required>
+      <div class="hint" id="file-hint">Nothing selected yet.</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-lg" type="submit">Upload &amp; extract skills</button>
+      {% if profile['resume_filename'] %}
+        <a class="btn" href="{{ url_for('student_resume_file') }}" target="_blank" rel="noopener">View current resume</a>
+      {% endif %}
+      <a class="btn btn-ghost" href="{{ url_for('student_skills') }}">Skip &mdash; add skills manually</a>
+    </div>
+  </form>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3>What happens to your file</h3>
+    <ol class="secondary" style="padding-left:20px;font-size:.9rem">
+      <li>We check it is genuinely a PDF (not just named <code>.pdf</code>).</li>
+      <li><strong>pypdf</strong> extracts the text of every page.</li>
+      <li>The text is matched against a dictionary of {{ 89 }}+ skills, including spelling
+          variants &mdash; <em>sklearn</em> becomes <strong>Scikit-learn</strong>,
+          <em>HTML5</em> becomes <strong>HTML</strong>.</li>
+      <li>We also look for your degree, branch, months of experience and your projects section.</li>
+      <li><strong>You review and edit everything</strong> on the next screen before it is saved.</li>
+    </ol>
+    <p class="tiny muted mb0">Your file stays on this machine, in the project's <code>uploads/</code> folder.
+       Only you can open it.</p>
+  </div>
+
+  <div class="card">
+    <h3>No resume handy?</h3>
+    {% if sample_exists %}
+      <p class="secondary">A sample resume PDF ships with the project so you can test the whole flow:</p>
+      <p><code>sample_data/sample_resume.pdf</code></p>
+      <p class="tiny muted">Select that file in the box above. It contains a B.Tech CSE profile with
+         Python, SQL, HTML, CSS and Flask &mdash; exactly the demo case.</p>
+    {% else %}
+      <p class="secondary">Generate one with:</p>
+      <p><code>python tools/make_sample_resume.py</code></p>
+    {% endif %}
+    <p class="mb0"><strong>Scanned resume?</strong> An image-only PDF has no text to extract.
+       We will tell you, and you can
+       <a href="{{ url_for('student_skills') }}">add your skills manually</a> instead.</p>
+  </div>
+</div>
+
+{% if profile['resume_text'] %}
+  <div class="card">
+    <div class="card-head">
+      <h3 class="mb0">Extracted text from your current resume</h3>
+      <button class="btn btn-sm" type="button" data-toggle="#resume-text">Show / hide</button>
+    </div>
+    <p class="tiny muted">This is exactly what the parser saw. If it looks wrong or empty, your PDF is
+       probably a scan.</p>
+    <pre id="resume-text" class="hidden" style="white-space:pre-wrap;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:14px;font-size:.82rem;max-height:340px;overflow:auto">{{ profile['resume_text'] }}</pre>
+  </div>
+{% endif %}
+
+{% if skills %}
+  <div class="card">
+    <div class="card-head">
+      <h3 class="mb0">Skills currently on your profile ({{ skills|length }})</h3>
+      <a class="btn btn-sm" href="{{ url_for('student_skills') }}">Edit</a>
+    </div>
+    {{ skill_badges(skills) }}
+  </div>
+{% endif %}
+{% endblock %}

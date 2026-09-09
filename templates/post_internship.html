@@ -1,0 +1,113 @@
+{% extends "dash_base.html" %}
+{% block title %}Post an internship{% endblock %}
+
+{% block dash %}
+<div class="page-head">
+  <div>
+    <h1>Post an internship</h1>
+    <p>The required-skills list is what the matching engine scores students against, so be specific.</p>
+  </div>
+</div>
+
+<form method="post" novalidate>
+  <div class="card">
+    <fieldset>
+      <legend>The role</legend>
+      <div class="field">
+        <label for="title">Internship title *</label>
+        <input type="text" id="title" name="title" value="{{ form.get('title', '') }}"
+               placeholder="Python Developer Intern" required>
+      </div>
+      <div class="field">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" rows="5"
+                  placeholder="What the intern will actually work on, who they report to, what a good outcome looks like.">{{ form.get('description', '') }}</textarea>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="domain">Domain</label>
+          <input list="domain-list" type="text" id="domain" name="domain"
+                 value="{{ form.get('domain', '') }}" placeholder="Web Development">
+          <datalist id="domain-list">
+            {% for domain in options.domains %}<option value="{{ domain }}">{% endfor %}
+          </datalist>
+        </div>
+        <div class="field">
+          <label for="location">Location * <span class="muted tiny">(or type Remote)</span></label>
+          <input list="location-list" type="text" id="location" name="location"
+                 value="{{ form.get('location', company['location'] or '') }}" required>
+          <datalist id="location-list">
+            {% for location in options.locations %}<option value="{{ location }}">{% endfor %}
+            <option value="Remote">
+          </datalist>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Terms</legend>
+      <div class="form-grid">
+        <div class="field">
+          <label for="stipend_min">Stipend from (Rs / month)</label>
+          <input type="number" id="stipend_min" name="stipend_min" min="0" step="500"
+                 value="{{ form.get('stipend_min', '') }}" placeholder="15000">
+        </div>
+        <div class="field">
+          <label for="stipend_max">Stipend up to (Rs / month)</label>
+          <input type="number" id="stipend_max" name="stipend_max" min="0" step="500"
+                 value="{{ form.get('stipend_max', '') }}" placeholder="18000">
+          <div class="hint">Leave blank for a fixed stipend.</div>
+        </div>
+        <div class="field">
+          <label for="duration_months">Duration (months)</label>
+          <input type="number" id="duration_months" name="duration_months" min="1" max="24"
+                 value="{{ form.get('duration_months', 3) }}">
+        </div>
+        <div class="field">
+          <label for="openings">Number of openings</label>
+          <input type="number" id="openings" name="openings" min="1" max="500"
+                 value="{{ form.get('openings', 1) }}">
+        </div>
+        <div class="field full">
+          <label for="qualification">Required qualification</label>
+          <input type="text" id="qualification" name="qualification"
+                 value="{{ form.get('qualification', '') }}" placeholder="B.Tech CSE / IT">
+          <div class="hint">
+            Write <strong>Any Degree</strong> to accept everyone, or
+            <strong>B.Tech Any Branch</strong> to fix the degree but not the branch.
+            You can list several, e.g. <em>B.Tech CSE / IT / MCA</em>.
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Skills &mdash; this drives the matching</legend>
+      <div class="field">
+        <label for="required_skills">Required skills * <span class="muted tiny">(comma separated)</span></label>
+        <input type="text" id="required_skills" name="required_skills"
+               value="{{ form.get('required_skills', '') }}" list="skill-library"
+               placeholder="Python, SQL, Flask, Git" required autocomplete="off">
+        <div class="hint">Each required skill carries full weight. Spellings are normalised
+          automatically (<em>sklearn</em> &rarr; Scikit-learn).</div>
+      </div>
+      <div class="field">
+        <label for="preferred_skills">Preferred skills <span class="muted tiny">(nice to have)</span></label>
+        <input type="text" id="preferred_skills" name="preferred_skills"
+               value="{{ form.get('preferred_skills', '') }}" list="skill-library"
+               placeholder="Docker, REST API" autocomplete="off">
+        <div class="hint">Preferred skills count half as much as required ones.</div>
+      </div>
+      <datalist id="skill-library">
+        {% for name in all_skills %}<option value="{{ name }}">{% endfor %}
+      </datalist>
+    </fieldset>
+
+    <div class="btn-row">
+      <button class="btn btn-primary btn-lg" type="submit">Publish &amp; see matching students</button>
+      <a class="btn" href="{{ url_for('company_dashboard') }}">Cancel</a>
+    </div>
+    <p class="hint mt2">* required. As soon as you publish, we rank every student in the pool against this role.</p>
+  </div>
+</form>
+{% endblock %}

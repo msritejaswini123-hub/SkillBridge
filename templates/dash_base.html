@@ -1,0 +1,51 @@
+{# Dashboard shell: sidebar on the left, page content on the right.
+   The sidebar links change with the logged-in role. #}
+{% extends "base.html" %}
+
+{% block body %}
+<div class="wrap">
+  <div class="shell">
+    <aside class="sidebar">
+      {% if user_role == 'student' %}
+        <div class="sidebar-title">Student</div>
+        <nav>
+          <a href="{{ url_for('student_dashboard') }}" {% if request.endpoint == 'student_dashboard' %}class="active"{% endif %}><span class="ico">▤</span> Dashboard</a>
+          <a href="{{ url_for('student_profile') }}" {% if request.endpoint == 'student_profile' %}class="active"{% endif %}><span class="ico">👤</span> My profile</a>
+          <a href="{{ url_for('student_resume') }}" {% if request.endpoint == 'student_resume' %}class="active"{% endif %}><span class="ico">📄</span> Resume upload</a>
+          <a href="{{ url_for('student_skills') }}" {% if request.endpoint == 'student_skills' %}class="active"{% endif %}><span class="ico">🏷</span> My skills</a>
+          <a href="{{ url_for('student_recommendations') }}" {% if request.endpoint == 'student_recommendations' %}class="active"{% endif %}><span class="ico">★</span> Recommendations</a>
+          <a href="{{ url_for('internships') }}" {% if request.endpoint == 'internships' %}class="active"{% endif %}><span class="ico">🔍</span> All internships</a>
+          <a href="{{ url_for('student_skill_gap') }}" {% if request.endpoint == 'student_skill_gap' %}class="active"{% endif %}><span class="ico">📈</span> Skill gap</a>
+          <a href="{{ url_for('student_applications') }}" {% if request.endpoint == 'student_applications' %}class="active"{% endif %}><span class="ico">📬</span> Applications</a>
+          <a href="{{ url_for('student_saved') }}" {% if request.endpoint == 'student_saved' %}class="active"{% endif %}><span class="ico">★</span> Saved</a>
+        </nav>
+
+      {% elif user_role == 'company' %}
+        <div class="sidebar-title">Industry</div>
+        <nav>
+          <a href="{{ url_for('company_dashboard') }}" {% if request.endpoint == 'company_dashboard' %}class="active"{% endif %}><span class="ico">▤</span> Dashboard</a>
+          <a href="{{ url_for('post_internship') }}" {% if request.endpoint == 'post_internship' %}class="active"{% endif %}><span class="ico">＋</span> Post internship</a>
+          <a href="{{ url_for('company_internships') }}" {% if request.endpoint == 'company_internships' %}class="active"{% endif %}><span class="ico">📋</span> My internships</a>
+          <a href="{{ url_for('company_candidates') }}" {% if request.endpoint == 'company_candidates' %}class="active"{% endif %}><span class="ico">🎯</span> Candidates</a>
+          <a href="{{ url_for('company_applications') }}" {% if request.endpoint == 'company_applications' %}class="active"{% endif %}><span class="ico">📬</span> Applications</a>
+          <a href="{{ url_for('company_profile') }}" {% if request.endpoint == 'company_profile' %}class="active"{% endif %}><span class="ico">🏢</span> Company profile</a>
+        </nav>
+
+      {% elif user_role == 'academia' %}
+        <div class="sidebar-title">Academia</div>
+        <nav>
+          <a href="{{ url_for('academia_dashboard') }}" {% if request.endpoint == 'academia_dashboard' %}class="active"{% endif %}><span class="ico">▤</span> Dashboard</a>
+          <a href="{{ url_for('academia_skill_demand') }}" {% if request.endpoint == 'academia_skill_demand' %}class="active"{% endif %}><span class="ico">📊</span> Skill demand report</a>
+          <a href="{{ url_for('internships') }}"><span class="ico">🔍</span> Browse internships</a>
+        </nav>
+      {% endif %}
+
+      <div class="sidebar-note">
+        <a href="{{ url_for('ml_info') }}">How matching works →</a>
+      </div>
+    </aside>
+
+    <main>{% block dash %}{% endblock %}</main>
+  </div>
+</div>
+{% endblock %}

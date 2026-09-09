@@ -1,0 +1,155 @@
+{% extends "dash_base.html" %}
+{% from "_macros.html" import demand_supply_chart, meter %}
+{% block title %}Skill demand report{% endblock %}
+
+{% block dash %}
+<div class="page-head">
+  <div>
+    <h1>Skill demand report</h1>
+    <p>The full picture: what industry asks for, what students have, and where the gaps are.</p>
+  </div>
+  <div class="btn-row">
+    <a class="btn" href="{{ url_for('academia_dashboard') }}">← Dashboard</a>
+    <button class="btn" type="button" onclick="window.print()">🖨 Print / PDF</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h2 class="mb0">Demand vs availability</h2>
+    <span class="badge badge-cat">{{ comparison|length }} skills</span>
+  </div>
+  {{ demand_supply_chart(comparison) }}
+</div>
+
+{# Table view of the same data - the chart is never the only way to read it. #}
+<div class="card">
+  <div class="card-head">
+    <h2 class="mb0">Table view</h2>
+    <span class="badge badge-cat">same data as the chart above</span>
+  </div>
+  <div class="table-scroll">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Skill</th><th>Category</th>
+          <th class="num">Internships asking</th><th class="num">Demand %</th>
+          <th class="num">Students having</th><th class="num">Availability %</th>
+          <th class="num">Gap</th><th>Priority</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in comparison %}
+          <tr>
+            <td><strong>{{ row.skill }}</strong></td>
+            <td class="secondary">{{ row.category }}</td>
+            <td class="num">{{ row.demand_count }}</td>
+            <td class="num">{{ row.demand_percent }}%</td>
+            <td class="num">{{ row.supply_count }}</td>
+            <td class="num">{{ row.supply_percent }}%</td>
+            <td class="num">{{ row.gap }}</td>
+            <td>
+              {% if row.gap > 0 %}
+                <span class="flag flag-{{ row.severity }}">
+                  ▲ {% if row.severity == 'critical' %}Critical{% elif row.severity == 'serious' %}High
+                     {% elif row.severity == 'warning' %}Medium{% else %}Low{% endif %}
+                </span>
+              {% else %}
+                <span class="flag flag-good">✓ Covered</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h2 class="mb0">⚠ Priority skills to add to the curriculum</h2>
+  </div>
+  {% if gaps %}
+    {% for row in gaps %}
+      <div class="meter-row">
+        <span><strong>{{ row.skill }}</strong>
+          <span class="badge badge-cat tiny">{{ row.category }}</span>
+          <span class="flag flag-{{ row.severity }}">▲ {{ row.gap }} point gap</span>
+        </span>
+        <span class="mono-num tiny">demand {{ row.demand_percent }}% vs supply {{ row.supply_percent }}%</span>
+      </div>
+      {{ meter(row.gap, row.severity) }}
+    {% endfor %}
+  {% else %}
+    <p class="secondary mb0">No positive gaps found.</p>
+  {% endif %}
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-head"><h3 class="mb0">Top industry demand</h3></div>
+    <div class="table-scroll">
+      <table class="data">
+        <thead><tr><th>Skill</th><th class="num">Internships</th><th class="num">As required</th><th class="num">%</th></tr></thead>
+        <tbody>
+          {% for row in demand %}
+            <tr>
+              <td>{{ row.skill }}</td>
+              <td class="num">{{ row.count }}</td>
+              <td class="num">{{ row.required_count }}</td>
+              <td class="num">{{ row.percent }}%</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3 class="mb0">Student skill availability</h3></div>
+    <div class="table-scroll">
+      <table class="data">
+        <thead><tr><th>Skill</th><th class="num">Students</th><th class="num">%</th></tr></thead>
+        <tbody>
+          {% for row in supply %}
+            <tr>
+              <td>{{ row.skill }}</td>
+              <td class="num">{{ row.count }}</td>
+              <td class="num">{{ row.percent }}%</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h3 class="mb0">Most common gaps in actual match results</h3>
+    <span class="badge badge-cat">from the skill_gaps table</span>
+  </div>
+  <p class="tiny muted">
+    Each time a student opens their recommendations, the engine records which skills the
+    matched internships wanted but the student lacked. This is the aggregate of those records &mdash;
+    a direct read of where students lose match points.
+  </p>
+  <div class="table-scroll">
+    <table class="data">
+      <thead><tr><th>Skill</th><th>Category</th><th class="num">Students missing it</th>
+                 <th class="num">% of students</th><th class="num">Internship mentions</th></tr></thead>
+      <tbody>
+        {% for row in common_gaps %}
+          <tr>
+            <td><strong>{{ row.skill }}</strong></td>
+            <td class="secondary">{{ row.category }}</td>
+            <td class="num">{{ row.students_missing }}</td>
+            <td class="num">{{ row.percent }}%</td>
+            <td class="num">{{ row.internship_mentions }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends "dash_base.html" %}
+{% from "_macros.html" import skill_badges %}
+{% block title %}My skills{% endblock %}
+
+{% block dash %}
+<div class="page-head">
+  <div>
+    <h1>{% if extracted %}Review your extracted skills{% else %}My skills{% endif %}</h1>
+    <p>
+      {% if extracted %}
+        We found these in your resume. Untick anything that is wrong, add anything we missed, then save.
+      {% else %}
+        Tick the skills you have. These drive 50% of every match score.
+      {% endif %}
+    </p>
+  </div>
+</div>
+
+{% if extracted %}
+  <div class="callout">
+    <strong>Read from your resume:</strong>
+    {{ extracted.skills|length }} skill{{ '' if extracted.skills|length == 1 else 's' }}
+    {% if extracted.degree %}&middot; qualification <strong>{{ extracted.degree }} {{ extracted.branch }}</strong>{% endif %}
+    {% if extracted.experience_months %}&middot; <strong>{{ extracted.experience_months }} months</strong> experience{% endif %}.
+    Nothing is saved until you press <em>Save my skills</em>.
+  </div>
+{% endif %}
+
+<form method="post" novalidate>
+  {% if extracted and extracted.skills %}
+    <div class="card">
+      <div class="card-head">
+        <h3 class="mb0">Found in your resume</h3>
+        <div class="btn-row">
+          <button class="btn btn-sm" type="button" data-check-all="#extracted-list">Select all</button>
+          <button class="btn btn-sm" type="button" data-uncheck-all="#extracted-list">Clear all</button>
+        </div>
+      </div>
+      <div class="check-grid" id="extracted-list">
+        {% for name in extracted.skills %}
+          <label class="check">
+            <input type="checkbox" name="skill" value="{{ name }}" checked>
+            <span>{{ name }}</span>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if extracted.degree %}
+      <div class="card">
+        <h3>Qualification found</h3>
+        <label class="check" style="max-width:420px">
+          <input type="checkbox" name="apply_qualification" value="1" checked>
+          <span>Use <strong>{{ extracted.degree }} {{ extracted.branch }}</strong> as my qualification</span>
+        </label>
+        <div class="form-grid mt2">
+          <div class="field">
+            <label for="degree">Degree</label>
+            <input type="text" id="degree" name="degree" value="{{ extracted.degree }}">
+          </div>
+          <div class="field">
+            <label for="branch">Branch</label>
+            <input type="text" id="branch" name="branch" value="{{ extracted.branch }}">
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
+
+  {% if saved %}
+    <div class="card">
+      <div class="card-head">
+        <h3 class="mb0">
+          {% if extracted %}Already on your profile{% else %}My skills ({{ saved|length }}){% endif %}
+        </h3>
+        <div class="btn-row">
+          <button class="btn btn-sm" type="button" data-check-all="#saved-list">Select all</button>
+          <button class="btn btn-sm" type="button" data-uncheck-all="#saved-list">Clear all</button>
+        </div>
+      </div>
+      <p class="tiny muted">Unticking a skill removes it from your profile when you save.</p>
+      <div class="check-grid" id="saved-list">
+        {% for row in saved %}
+          {% if not (extracted and row['name'] in extracted.skills) %}
+            <label class="check">
+              <input type="checkbox" name="skill" value="{{ row['name'] }}" checked>
+              <span>{{ row['name'] }}
+                <span class="badge badge-cat tiny">{{ row['source'] }}</span>
+              </span>
+            </label>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="card">
+    <h3>Add more skills</h3>
+    <div class="field">
+      <label for="extra_skills">Type skills separated by commas</label>
+      <input type="text" id="extra_skills" name="extra_skills" list="skill-library"
+             placeholder="Docker, AWS, Power BI" autocomplete="off">
+      <datalist id="skill-library">
+        {% for name in all_skills %}<option value="{{ name }}">{% endfor %}
+      </datalist>
+      <div class="hint">
+        Our dictionary knows {{ library_size }} skills and normalises spellings
+        (<em>sklearn</em> &rarr; Scikit-learn). Anything not in the list is still saved as typed.
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary btn-lg" type="submit">Save my skills</button>
+      <a class="btn" href="{{ url_for('student_recommendations') }}">Cancel</a>
+    </div>
+  </div>
+</form>
+
+{% if not saved and not extracted %}
+  <div class="empty">
+    <span class="empty-ico">🏷</span>
+    <h3>No skills yet</h3>
+    <p>Upload a resume to fill this in automatically, or type them in the box above.</p>
+    <a class="btn btn-primary mt2" href="{{ url_for('student_resume') }}">Upload resume</a>
+  </div>
+{% endif %}
+{% endblock %}

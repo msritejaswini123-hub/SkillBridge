@@ -1,0 +1,78 @@
+{% extends "dash_base.html" %}
+{% from "_macros.html" import status_badge, skill_badges %}
+{% block title %}Applications{% endblock %}
+
+{% block dash %}
+<div class="page-head">
+  <div>
+    <h1>Applications</h1>
+    <p>Every student who applied to one of your internships. Change a status and the student sees it immediately.</p>
+  </div>
+</div>
+
+<div class="card">
+  <form method="get" class="btn-row">
+    <label for="status" class="tiny muted" style="align-self:center">Filter by status</label>
+    <select name="status" id="status" style="max-width:220px">
+      <option value="">All statuses</option>
+      {% for value in statuses %}
+        <option value="{{ value }}" {{ 'selected' if status_filter == value }}>{{ value }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn" type="submit">Apply filter</button>
+    {% if status_filter %}<a class="btn btn-ghost" href="{{ url_for('company_applications') }}">Clear</a>{% endif %}
+  </form>
+</div>
+
+{% if applications %}
+  <div class="card card-flush">
+    <div class="table-scroll">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Student</th><th>Role</th><th>Qualification</th><th>Skills</th>
+            <th class="num">Match</th><th>Applied</th><th>Status</th><th>Update</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in applications %}
+            {% set app = row.application %}
+            <tr>
+              <td>
+                <strong>{{ app['student_name'] }}</strong><br>
+                <span class="tiny muted">{{ app['email'] }}</span><br>
+                <span class="tiny muted">{{ app['college'] or '—' }}</span>
+              </td>
+              <td class="secondary">{{ app['title'] }}<br><span class="tiny muted">{{ app['location'] }}</span></td>
+              <td class="nowrap">{{ app['qualification'] }} {{ app['branch'] }}<br>
+                  <span class="tiny muted">{{ app['graduation_year'] or '' }}</span></td>
+              <td style="min-width:200px">{{ skill_badges(row.skills, 'skill', 6) }}</td>
+              <td class="num"><span class="match-pill match-{{ app['match_score']|round|int|score_class }}">{{ app['match_score']|round|int }}%</span></td>
+              <td class="tiny muted nowrap">{{ app['applied_at'][:10] }}</td>
+              <td>{{ status_badge(app['status']) }}</td>
+              <td>
+                <form method="post" action="{{ url_for('update_application_status', application_id=app['id']) }}" class="btn-row">
+                  <select name="status" style="min-width:130px">
+                    {% for value in statuses %}
+                      <option value="{{ value }}" {{ 'selected' if app['status'] == value }}>{{ value }}</option>
+                    {% endfor %}
+                  </select>
+                  <button class="btn btn-sm btn-primary" type="submit">Save</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% else %}
+  <div class="empty">
+    <span class="empty-ico">📬</span>
+    <h3>No applications{% if status_filter %} with status "{{ status_filter }}"{% endif %}</h3>
+    <p>Students apply from the internship detail page.
+       You can also reach out to the top ranked candidates directly.</p>
+    <a class="btn mt2" href="{{ url_for('company_candidates') }}">See recommended candidates</a>
+  </div>
+{% endif %}
+{% endblock %}

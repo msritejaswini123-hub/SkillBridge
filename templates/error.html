@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="wrap-narrow">
+  <div class="card center">
+    <div class="hero-number muted">{{ code }}</div>
+    <h1>{{ title }}</h1>
+    <p class="secondary">{{ message }}</p>
+    <div class="btn-row" style="justify-content:center">
+      <a class="btn btn-primary" href="{{ url_for('index') }}">Go home</a>
+      {% if current_user %}<a class="btn" href="{{ url_for('dashboard') }}">My dashboard</a>{% endif %}
+      <a class="btn btn-ghost" href="{{ url_for('internships') }}">Browse internships</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

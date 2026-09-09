@@ -1,0 +1,159 @@
+{% extends "dash_base.html" %}
+{% from "_macros.html" import job_card, skill_badges, meter, status_badge, match_pill %}
+{% block title %}Student dashboard{% endblock %}
+
+{% block dash %}
+<div class="page-head">
+  <div>
+    <h1>Hello, {{ current_user['name'].split()[0] }}</h1>
+    <p>{{ profile['qualification'] or 'Qualification not set' }}{% if profile['branch'] %} {{ profile['branch'] }}{% endif %}
+       {% if profile['college'] %}&middot; {{ profile['college'] }}{% endif %}</p>
+  </div>
+  <div class="btn-row">
+    <a class="btn" href="{{ url_for('student_resume') }}">📄 Upload resume</a>
+    <a class="btn btn-primary" href="{{ url_for('student_recommendations') }}">★ My recommendations</a>
+  </div>
+</div>
+
+{% if completion < 100 %}
+  <div class="card">
+    <div class="card-head">
+      <h3 class="mb0">Profile completion</h3>
+      <span class="badge {{ 'badge-have' if completion >= 80 else 'badge-demo' }}">{{ completion }}% complete</span>
+    </div>
+    {{ meter(completion, 'good' if completion >= 80 else 'warning') }}
+    <p class="tiny muted mb0">
+      A complete profile gives sharper recommendations. Missing:
+      {% set missing = [] %}
+      {% if not profile['qualification'] %}{% set _ = missing.append('qualification') %}{% endif %}
+      {% if not profile['branch'] %}{% set _ = missing.append('branch') %}{% endif %}
+      {% if not profile['graduation_year'] %}{% set _ = missing.append('graduation year') %}{% endif %}
+      {% if not profile['preferred_location'] %}{% set _ = missing.append('preferred location') %}{% endif %}
+      {% if not (profile['min_stipend'] or profile['max_stipend']) %}{% set _ = missing.append('stipend range') %}{% endif %}
+      {% if not profile['college'] %}{% set _ = missing.append('college') %}{% endif %}
+      {% if not profile['phone'] %}{% set _ = missing.append('phone') %}{% endif %}
+      {% if not profile['resume_text'] %}{% set _ = missing.append('resume upload') %}{% endif %}
+      {% if not profile['projects_text'] %}{% set _ = missing.append('projects') %}{% endif %}
+      {% if not skills %}{% set _ = missing.append('skills') %}{% endif %}
+      {{ missing|join(', ') if missing else 'nothing - you are all set' }}.
+      <a href="{{ url_for('student_profile') }}">Complete profile →</a>
+    </p>
+  </div>
+{% endif %}
+
+<div class="tiles mb3">
+  <div class="tile">
+    <span class="tile-label">My skills</span>
+    <div class="tile-value">{{ skills|length }}</div>
+    <div class="tile-foot"><a href="{{ url_for('student_skills') }}">Review skills</a></div>
+  </div>
+  <div class="tile">
+    <span class="tile-label">Preferred location</span>
+    <div class="tile-value" style="font-size:1.15rem">{{ profile['preferred_location'] or '—' }}</div>
+    <div class="tile-foot">{{ total_internships }} internships live</div>
+  </div>
+  <div class="tile">
+    <span class="tile-label">Expected stipend</span>
+    <div class="tile-value" style="font-size:1.15rem">
+      {% if profile['min_stipend'] or profile['max_stipend'] %}
+        Rs {{ profile['min_stipend']|rupees }}–{{ profile['max_stipend']|rupees }}
+      {% else %}—{% endif %}
+    </div>
+    <div class="tile-foot">per month</div>
+  </div>
+  <div class="tile">
+    <span class="tile-label">Applications</span>
+    <div class="tile-value">{{ applications|length }}</div>
+    <div class="tile-foot"><a href="{{ url_for('student_applications') }}">Track status</a></div>
+  </div>
+  <div class="tile">
+    <span class="tile-label">Saved</span>
+    <div class="tile-value">{{ saved_count }}</div>
+    <div class="tile-foot"><a href="{{ url_for('student_saved') }}">View saved</a></div>
+  </div>
+</div>
+
+{% if not skills %}
+  <div class="card">
+    <div class="empty">
+      <span class="empty-ico">📄</span>
+      <h3>Let's build your skill profile</h3>
+      <p>Upload your resume PDF and we will pull out your skills automatically.<br>
+         You get to review and edit everything before it is saved.</p>
+      <a class="btn btn-primary btn-lg mt2" href="{{ url_for('student_resume') }}">Upload resume</a>
+    </div>
+  </div>
+{% else %}
+
+  <div class="card">
+    <div class="card-head">
+      <h2 class="mb0">My skill profile</h2>
+      <a class="btn btn-sm" href="{{ url_for('student_skills') }}">Edit skills</a>
+    </div>
+    {{ skill_badges(skills) }}
+  </div>
+
+  <div class="card-head">
+    <h2 class="mb0">Recommended for you</h2>
+    <a href="{{ url_for('student_recommendations') }}">See all matches →</a>
+  </div>
+  <div class="grid grid-cards mb3">
+    {% for card in recommendations %}
+      {{ job_card({'internship': card.internship, 'match': card.match,
+                   'skills': {'required': card.match.required_skills,
+                              'preferred': card.match.preferred_skills},
+                   'saved': false, 'applied': false}) }}
+    {% else %}
+      <div class="empty">No internships match yet. Try widening your location or stipend range.</div>
+    {% endfor %}
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-head">
+        <h3 class="mb0">Your top skill gaps</h3>
+        <a class="btn btn-sm" href="{{ url_for('student_skill_gap') }}">Full report</a>
+      </div>
+      {% if gaps %}
+        <p class="tiny muted">Skills your recommended internships asked for that you do not have yet.</p>
+        {% for gap in gaps %}
+          <div class="meter-row">
+            <span>{{ gap.skill }} <span class="badge badge-cat tiny">{{ gap.category }}</span></span>
+            <span class="mono-num tiny">wanted by {{ gap.demand_count }}</span>
+          </div>
+          {{ meter(gap.demand_count * 20, 'serious' if gap.demand_count >= 4 else 'warning') }}
+        {% endfor %}
+      {% else %}
+        <p class="secondary mb0">No gaps found in your top matches. Nice work.</p>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3 class="mb0">Recent applications</h3>
+        <a class="btn btn-sm" href="{{ url_for('student_applications') }}">All</a>
+      </div>
+      {% if applications %}
+        <div class="table-scroll">
+          <table class="data">
+            <thead><tr><th>Role</th><th>Company</th><th>Status</th><th class="num">Match</th></tr></thead>
+            <tbody>
+              {% for app in applications %}
+                <tr>
+                  <td>{{ app['title'] }}</td>
+                  <td class="secondary">{{ app['company_name'] }}</td>
+                  <td>{{ status_badge(app['status']) }}</td>
+                  <td class="num">{{ app['match_score']|round|int }}%</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="secondary mb0">You have not applied anywhere yet.
+           <a href="{{ url_for('student_recommendations') }}">See your matches →</a></p>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

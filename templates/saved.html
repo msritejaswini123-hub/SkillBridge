@@ -1,0 +1,26 @@
+{% extends "dash_base.html" %}
+{% from "_macros.html" import job_card %}
+{% block title %}Saved internships{% endblock %}
+
+{% block dash %}
+<div class="page-head">
+  <div>
+    <h1>Saved internships</h1>
+    <p>Roles you bookmarked. Match scores update automatically as you add skills.</p>
+  </div>
+  <a class="btn" href="{{ url_for('student_recommendations') }}">Find more</a>
+</div>
+
+{% if cards %}
+  <div class="grid grid-cards">
+    {% for card in cards %}{{ job_card(card) }}{% endfor %}
+  </div>
+{% else %}
+  <div class="empty">
+    <span class="empty-ico">★</span>
+    <h3>Nothing saved yet</h3>
+    <p>Press <strong>☆ Save</strong> on any internship card to keep it here.</p>
+    <a class="btn btn-primary mt2" href="{{ url_for('internships') }}">Browse internships</a>
+  </div>
+{% endif %}
+{% endblock %}
