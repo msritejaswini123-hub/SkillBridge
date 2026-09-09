@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block body %}
+<div class="wrap-sm">
+  <div class="panel">
+    <div class="panel-body center">
+      <div class="eyebrow">Error {{ code }}</div>
+      <h1 class="mt2 mb1">{{ title }}</h1>
+      <p class="head-sub" style="margin-left:auto;margin-right:auto">{{ message }}</p>
+      <div class="btns mt3" style="justify-content:center">
+        <a class="btn btn-primary" href="{{ url_for('index') }}">Home</a>
+        {% if current_user %}<a class="btn" href="{{ url_for('dashboard') }}">Dashboard</a>{% endif %}
+        <a class="btn btn-quiet" href="{{ url_for('internships') }}">Internships</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

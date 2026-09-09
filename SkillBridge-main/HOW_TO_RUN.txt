@@ -1,0 +1,155 @@
+==========================================================
+ SkillBridge - HOW TO RUN (beginner friendly)
+==========================================================
+
+You need Python 3.9 or newer. Nothing else. No Node, no React,
+no MongoDB. Just copy-paste the lines below, one at a time.
+
+
+----------------------------------------------------------
+ STEP 0 - OPEN THE PROJECT
+----------------------------------------------------------
+IF YOU GOT THIS AS A ZIP: extract it first!
+Windows lets you look inside a .zip like a normal folder, but
+the app cannot create its database in there. Right-click the
+zip -> "Extract All..." -> then use the extracted folder.
+
+Open that folder in VS Code, then open a terminal inside it:
+   View  ->  Terminal      (or press  Ctrl + `  )
+
+Make sure the terminal says you are inside the project folder.
+
+
+----------------------------------------------------------
+ STEP 1 - MAKE A VIRTUAL ENVIRONMENT  (do this once)
+----------------------------------------------------------
+A "venv" is a private box for this project's libraries.
+
+Mac / Linux:
+   python3 -m venv venv
+
+Windows:
+   python -m venv venv
+
+(If a "venv" folder already exists, skip this step.)
+
+
+----------------------------------------------------------
+ STEP 2 - TURN THE VENV ON  (do this every time)
+----------------------------------------------------------
+Mac / Linux:
+   source venv/bin/activate
+
+Windows, Command Prompt (cmd):
+   venv\Scripts\activate
+
+Windows, PowerShell:
+   .\venv\Scripts\Activate.ps1
+
+You will now see (venv) at the start of your terminal line.
+That is how you know it worked.
+
+PowerShell says "running scripts is disabled on this system"?
+   Run this once in the same window, then try again:
+      Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+   Or simply use Command Prompt instead - it has no such restriction.
+
+
+----------------------------------------------------------
+ STEP 3 - INSTALL THE LIBRARIES  (do this once)
+----------------------------------------------------------
+   pip install -r requirements.txt
+
+
+----------------------------------------------------------
+ STEP 4 - BUILD THE DATABASE  (do this once)
+----------------------------------------------------------
+   python init_db.py
+
+This creates database/portal.db and fills it with demo data:
+23 internships, 6 companies, 7 students, courses.
+
+
+----------------------------------------------------------
+ STEP 5 - START THE WEBSITE
+----------------------------------------------------------
+   python app.py
+
+Then open this address in your browser:
+
+   http://127.0.0.1:5000
+
+To stop the server, click the terminal and press  Ctrl + C
+
+
+==========================================================
+ LOGIN DETAILS FOR THE DEMO
+==========================================================
+The password for EVERY demo account is:   demo1234
+
+STUDENT      rahul@demo.com        (has resume + skills already)
+STUDENT      priya@demo.com
+STUDENT      arjun@demo.com
+
+COMPANY      hr@technova.com       (has internships posted)
+COMPANY      hr@datasphere.com
+
+COLLEGE      dean@cvr.edu.in       (sees the skill-gap reports)
+
+You can also click "Register" and make your own student account.
+
+
+==========================================================
+ THE 2 MINUTE DEMO (what to show the judges)
+==========================================================
+1.  Login as rahul@demo.com
+2.  Click "Recommendations" - internships are ranked by match %
+3.  Click any internship - see matched skills, missing skills,
+    and the score breakdown that adds up to the match %
+4.  Click "Apply"
+5.  Click "Skill Gap" - see what to learn + free courses
+6.  Logout, login as hr@technova.com
+7.  Click "Candidates" - students ranked for that internship
+8.  Logout, login as dean@cvr.edu.in
+9.  See industry demand vs student skills, and the big gaps
+
+
+==========================================================
+ TESTING THE RESUME UPLOAD
+==========================================================
+A ready-made sample resume PDF is included at:
+
+   sample_data/sample_resume.pdf
+
+Login as a student -> "Resume" -> upload that file ->
+the skills are pulled out of the PDF -> edit them -> Save.
+
+Only PDF files are accepted, max size 5 MB.
+
+
+==========================================================
+ IF SOMETHING GOES WRONG
+==========================================================
+"command not found: python"   (Mac / Linux)
+   -> type  python3  instead of  python
+
+"'python' is not recognized..."   (Windows)
+   -> Python is not on your PATH. Use the launcher instead:
+         py -m venv venv
+         py init_db.py
+         py app.py
+      Or reinstall Python and TICK "Add python.exe to PATH".
+
+"No module named flask"
+   -> the venv is off. Go back to STEP 2, then STEP 3.
+
+"Port 5000 is already in use"  (common on Mac)
+   -> run:  python app.py --port 5001
+   -> then open  http://127.0.0.1:5001
+
+"I want a clean database again"
+   -> run:  python init_db.py --reset
+
+The website is slow on the very first page load
+   -> normal. The small ML model trains once at startup
+      (about 1 second), then it is cached.

@@ -1,0 +1,79 @@
+{% extends "dash_base.html" %}
+{% from "_macros.html" import status_badge with context %}
+{% from "_icons.html" import icon %}
+{% block title %}Applications{% endblock %}
+
+{% block dash %}
+<div class="head">
+  <div>
+    <h1>Applications</h1>
+    <div class="head-sub">Every internship you applied to, with the match score recorded at the time.</div>
+  </div>
+  <div class="head-actions">
+    <a class="btn btn-primary" href="{{ url_for('student_recommendations') }}">Find more matches</a>
+  </div>
+</div>
+
+{% if applications %}
+  {% set selected = applications|selectattr('status', 'equalto', 'Selected')|list|length %}
+  {% set shortlisted = applications|selectattr('status', 'equalto', 'Shortlisted')|list|length %}
+  <div class="stats">
+    <div class="stat"><span class="stat-label">Applied</span><div class="stat-value">{{ applications|length }}</div></div>
+    <div class="stat"><span class="stat-label">Shortlisted</span><div class="stat-value">{{ shortlisted }}</div></div>
+    <div class="stat"><span class="stat-label">Selected</span><div class="stat-value">{{ selected }}</div></div>
+    <div class="stat">
+      <span class="stat-label">Average match</span>
+      <div class="stat-value">{{ ((applications|sum(attribute='match_score')) / applications|length)|round|int }}%</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="scroll-x">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Role</th><th>Company</th><th>Location</th><th>Stipend</th>
+            <th class="num">Match</th><th>Status</th><th>Applied</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in applications %}
+            <tr>
+              <td>
+                <strong>{{ app['title'] }}</strong>
+                <div class="t-xs muted">{{ app['domain'] }} &middot; {{ app['duration_months'] }} months</div>
+              </td>
+              <td>{{ app['company_name'] }}</td>
+              <td>{{ app['location'] }}</td>
+              <td class="nowrap">{{ app|stipend_range }}</td>
+              <td class="num">
+                <span class="score score-{{ app['match_score']|round|int|score_class }}">{{ app['match_score']|round|int }}%</span>
+              </td>
+              <td>{{ status_badge(app['status']) }}</td>
+              <td class="t-xs muted nowrap">{{ app['applied_at'][:10] }}</td>
+              <td><a class="btn btn-sm" href="{{ url_for('internship_detail', internship_id=app['internship_id']) }}">View</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="panel-foot">
+      <strong>Applied</strong> the company has your application &middot;
+      <strong>Under Review</strong> they are looking at it &middot;
+      <strong>Shortlisted</strong> through to the next round &middot;
+      <strong>Selected</strong> offer made &middot;
+      <strong>Rejected</strong> not this time. Only the company can change these.
+    </div>
+  </div>
+{% else %}
+  <div class="panel">
+    <div class="empty">
+      {{ icon('inbox', 28) }}
+      <h3>No applications yet</h3>
+      <p>Open a recommended internship and press Apply. Your match score is saved with the
+         application so the company can see why you fit.</p>
+      <a class="btn btn-primary" href="{{ url_for('student_recommendations') }}">See recommendations</a>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

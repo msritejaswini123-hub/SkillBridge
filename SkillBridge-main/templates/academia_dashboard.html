@@ -1,0 +1,241 @@
+{% extends "dash_base.html" %}
+{% from "_macros.html" import demand_supply_chart, meter, severity_flag with context %}
+{% from "_icons.html" import icon %}
+{% block title %}Overview{% endblock %}
+
+{% block dash %}
+<div class="head">
+  <div>
+    <h1>{{ institution['college_name'] if institution else 'Academia' }}</h1>
+    <div class="head-sub">
+      {{ institution['department'] if institution and institution['department'] else 'Training &amp; Placement' }}
+      &middot; live view of what industry wants and what your students have
+    </div>
+  </div>
+  <div class="head-actions">
+    <a class="btn btn-primary" href="{{ url_for('academia_skill_demand') }}">Full skill demand report</a>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <span class="stat-label">Students</span>
+    <div class="stat-value">{{ stats.students }}</div>
+    <div class="stat-foot">{{ stats.students_with_resume }} uploaded a resume</div>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Live internships</span>
+    <div class="stat-value">{{ stats.internships }}</div>
+    <div class="stat-foot">{{ stats.openings }} openings, {{ stats.companies }} companies</div>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Applications</span>
+    <div class="stat-value">{{ stats.applications }}</div>
+    <div class="stat-foot">by {{ stats.applicants }} students</div>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Shortlisted</span>
+    <div class="stat-value">{{ stats.shortlisted }}</div>
+    <div class="stat-foot">progressed a round</div>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Selected</span>
+    <div class="stat-value">{{ stats.selected }}</div>
+    <div class="stat-foot">offers made</div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <div>
+      <h2>Industry demand vs student availability</h2>
+      <div class="panel-head-sub">The ten most requested skills across all {{ stats.internships }} active internships</div>
+    </div>
+    <a class="btn btn-sm" href="{{ url_for('academia_skill_demand') }}">Table view</a>
+  </div>
+  <div class="panel-body">
+    {{ demand_supply_chart(comparison,
+        'Demand = share of active internships listing the skill. Availability = share of the '
+        ~ stats.students ~ ' students on the portal who have it. Hover a bar for raw counts.') }}
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <div>
+      <h2>Where to focus the curriculum</h2>
+      <div class="panel-head-sub">Largest positive gaps &mdash; industry wants these far more than your students have them</div>
+    </div>
+  </div>
+  {% if gaps %}
+    <div class="scroll-x">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>#</th><th>Skill</th><th>Category</th>
+            <th class="num">Demand</th><th class="num">Students have</th>
+            <th class="num">Gap</th><th>Priority</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in gaps %}
+            <tr>
+              <td><span class="rank {{ 'rank-1' if loop.first }}">{{ loop.index }}</span></td>
+              <td><strong>{{ row.skill }}</strong></td>
+              <td>{{ row.category }}</td>
+              <td class="num">{{ row.demand_percent }}% <span class="t-xs muted">({{ row.demand_count }})</span></td>
+              <td class="num">{{ row.supply_percent }}% <span class="t-xs muted">({{ row.supply_count }})</span></td>
+              <td class="num"><strong>{{ row.gap }}</strong></td>
+              <td>{{ severity_flag(row.severity) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="panel-foot">
+      Priority bands: Critical from a 40 point gap, High from 25, Medium from 10. Each row
+      carries an icon and a word as well as colour.
+    </div>
+  {% else %}
+    <div class="panel-body"><p class="muted mb0">No positive gaps &mdash; student skills currently cover industry demand.</p></div>
+  {% endif %}
+</div>
+
+<div class="grid grid-2">
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h3>Common student skill gaps</h3>
+        <div class="panel-head-sub">Most often missing when the engine matched a student to a role</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      {% if common_gaps %}
+        {% for row in common_gaps %}
+          <div class="meter-row">
+            <span>{{ row.skill }} <span class="badge">{{ row.category }}</span></span>
+            <span class="num t-xs">{{ row.percent }}% of students</span>
+          </div>
+          {{ meter(row.percent, 'critical' if row.percent >= 75 else ('serious' if row.percent >= 50 else 'warn')) }}
+        {% endfor %}
+      {% else %}
+        <p class="muted mb0">No gap data yet &mdash; students need skill profiles first.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Placement funnel</h3>
+      <span class="badge">avg match {{ placement.avg_match_score }}%</span>
+    </div>
+    <div class="panel-body">
+      {% for stage in placement.funnel %}
+        <div class="funnel-row" style="--i: {{ loop.index0 }}">
+          <span class="funnel-label">{{ stage.stage }}</span>
+          <div class="track">
+            {% if stage.percent > 0 %}
+              <div class="track-fill fill-1" style="width: {{ stage.percent }}%"></div>
+            {% endif %}
+          </div>
+          <span class="bars-value">{{ stage.value }} <span class="muted">({{ stage.percent }}%)</span></span>
+        </div>
+      {% endfor %}
+      <p class="note">Percentages are of all registered students. Selected means a company
+        marked an application as Selected.</p>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="panel">
+    <div class="panel-head"><h3>Internship domains</h3></div>
+    <div class="scroll-x">
+      <table class="data">
+        <thead><tr><th>Domain</th><th class="num">Roles</th><th class="num">Openings</th>
+                   <th class="num">Applications</th><th class="num">Avg stipend</th></tr></thead>
+        <tbody>
+          {% for row in domains %}
+            <tr>
+              <td><strong>{{ row.domain }}</strong></td>
+              <td class="num">{{ row.n_internships }}</td>
+              <td class="num">{{ row.n_openings }}</td>
+              <td class="num">{{ row.n_applications }}</td>
+              <td class="num nowrap">{{ row.avg_stipend|rupees }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Branch-wise participation</h3></div>
+    <div class="scroll-x">
+      <table class="data">
+        <thead><tr><th>Branch</th><th class="num">Students</th><th class="num">Applied</th>
+                   <th class="num">Shortlisted</th><th class="num">Selected</th><th class="num">Rate</th></tr></thead>
+        <tbody>
+          {% for row in placement.by_branch %}
+            <tr>
+              <td><strong>{{ row.branch }}</strong></td>
+              <td class="num">{{ row.students }}</td>
+              <td class="num">{{ row.applied }}</td>
+              <td class="num">{{ row.shortlisted or 0 }}</td>
+              <td class="num">{{ row.selected or 0 }}</td>
+              <td class="num">{{ row.participation }}%</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="panel">
+    <div class="panel-head"><h3>Where the opportunities are</h3></div>
+    <div class="panel-body">
+      {% set max_loc = locations[0].n_internships if locations else 1 %}
+      {% for row in locations %}
+        <div class="meter-row">
+          <span>{{ row.location }}</span>
+          <span class="num t-xs">{{ row.n_internships }} roles &middot; avg {{ row.avg_stipend|rupees }}</span>
+        </div>
+        {{ meter(100 * row.n_internships / max_loc) }}
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Application outcomes</h3></div>
+    {% if placement.application_status %}
+      <div class="scroll-x">
+        <table class="data">
+          <thead><tr><th>Status</th><th class="num">Count</th><th class="num">Share</th></tr></thead>
+          <tbody>
+            {% for row in placement.application_status %}
+              <tr>
+                <td>{{ row.status }}</td>
+                <td class="num">{{ row.n }}</td>
+                <td class="num">{{ (100 * row.n / stats.applications)|round(1) }}%</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="panel-foot">Only companies can change an application's status, so this reflects
+        real employer decisions on the portal.</div>
+    {% else %}
+      <div class="panel-body"><p class="muted mb0">No applications recorded yet.</p></div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="note-box">
+  {{ icon('info', 14) }}
+  <span>Every figure here is a live SQL aggregate over the same tables students and companies
+    write to. Demo records are labelled as such elsewhere in the app; these statistics are
+    computed, never typed in.</span>
+</div>
+{% endblock %}

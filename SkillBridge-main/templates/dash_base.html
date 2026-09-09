@@ -1,0 +1,60 @@
+{# Dashboard shell: role-aware sidebar on the left, page content on the right. #}
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% macro side_link(endpoint, label, icon_name, active_on=None) %}
+  {% set is_active = request.endpoint == endpoint or (active_on and request.endpoint in active_on) %}
+  <a href="{{ url_for(endpoint) }}" {% if is_active %}aria-current="page"{% endif %}>
+    {{ icon(icon_name, 15) }} <span>{{ label }}</span>
+  </a>
+{% endmacro %}
+
+{% block body %}
+<div class="wrap">
+  <div class="shell">
+    <aside class="side">
+      {% if user_role == 'student' %}
+        <div class="side-label">Student</div>
+        <nav>
+          {{ side_link('student_dashboard',       'Overview',        'grid') }}
+          {{ side_link('student_recommendations', 'Recommendations', 'star') }}
+          {{ side_link('internships',            'All internships', 'search') }}
+          {{ side_link('student_skill_gap',      'Skill gap',       'trending') }}
+          {{ side_link('student_applications',   'Applications',    'inbox') }}
+          {{ side_link('student_saved',          'Saved',           'bookmark') }}
+          <div class="side-label" style="padding-top:12px">Profile</div>
+          {{ side_link('student_profile',        'Details',         'user') }}
+          {{ side_link('student_resume',         'Resume',          'file') }}
+          {{ side_link('student_skills',         'Skills',          'tag') }}
+        </nav>
+
+      {% elif user_role == 'company' %}
+        <div class="side-label">Industry</div>
+        <nav>
+          {{ side_link('company_dashboard',    'Overview',      'grid') }}
+          {{ side_link('company_candidates',   'Candidates',    'target') }}
+          {{ side_link('company_applications', 'Applications',  'inbox') }}
+          <div class="side-label" style="padding-top:12px">Postings</div>
+          {{ side_link('company_internships',  'My internships','clipboard') }}
+          {{ side_link('post_internship',      'New internship','plus') }}
+          {{ side_link('company_profile',      'Company',       'building') }}
+        </nav>
+
+      {% elif user_role == 'academia' %}
+        <div class="side-label">Academia</div>
+        <nav>
+          {{ side_link('academia_dashboard',    'Overview',            'grid') }}
+          {{ side_link('academia_skill_demand', 'Skill demand report', 'chart') }}
+          {{ side_link('internships',           'Browse internships',  'search') }}
+        </nav>
+      {% endif %}
+
+      <div class="side-foot">
+        <a href="{{ url_for('ml_info') }}" class="row">How matching works {{ icon('arrow-right', 12) }}</a>
+      </div>
+    </aside>
+
+    <main>{% block dash %}{% endblock %}</main>
+  </div>
+</div>
+{% endblock %}
