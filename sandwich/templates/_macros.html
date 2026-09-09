@@ -1,0 +1,212 @@
+{# ==========================================================================
+   Shared components: skill chips, match score, status, meters, listing rows,
+   the score breakdown table, the demand/supply chart and the sort toggle.
+   ========================================================================== #}
+{% from "_icons.html" import icon %}
+
+
+{% macro skill_chips(names, kind='skill', limit=0) %}
+  {% set shown = names[:limit] if limit else names %}
+  <span class="chips">
+    {% for name in shown %}<span class="badge badge-{{ kind }}">{{ name }}</span>{% endfor %}
+    {% if limit and names|length > limit %}
+      <span class="badge">+{{ names|length - limit }}</span>
+    {% endif %}
+  </span>
+{% endmacro %}
+
+
+{# Matched / missing skills, marked with an icon as well as colour. #}
+{% macro skill_status_chips(names, matched) %}
+  <span class="chips">
+    {% for name in names %}
+      {% if name in matched %}
+        <span class="badge badge-ok">{{ icon('check', 12) }} {{ name }}</span>
+      {% else %}
+        <span class="badge badge-bad">{{ icon('x', 12) }} {{ name }}</span>
+      {% endif %}
+    {% endfor %}
+  </span>
+{% endmacro %}
+
+
+{% macro score_badge(match, show_ml=true) %}
+  {% if match %}
+    <span class="score score-{{ match.score|score_class }}"
+          title="Rule-based score {{ match.rule_score }}%{% if match.ml_score is not none %} · ML shortlist likelihood {{ match.ml_score }}%{% endif %}">
+      {{ match.score }}%<small>match</small>
+    </span>
+    {% if show_ml and match.ml_score is not none %}
+      <span class="badge t-xs" title="Logistic-regression shortlist probability, trained on synthetic demo data. Affects ordering only.">
+        ML {{ match.ml_score|round|int }}%
+      </span>
+    {% endif %}
+  {% endif %}
+{% endmacro %}
+
+
+{% macro status_badge(status) %}
+  <span class="badge st-{{ status|lower|replace(' ', '-') }}">{{ status }}</span>
+{% endmacro %}
+
+
+{% macro meter(percent, tone='accent') %}
+  <div class="meter">
+    <div class="meter-fill is-{{ tone }}" style="width: {{ [[percent|float, 0]|max, 100]|min }}%"></div>
+  </div>
+{% endmacro %}
+
+
+{% macro job_row(card, show_actions=true) %}
+  {% set job = card.internship %}
+  {% set match = card.match %}
+  <article class="job">
+    <div class="job-top">
+      <div>
+        <h3 class="job-title">
+          <a href="{{ url_for('internship_detail', internship_id=job['id']) }}">{{ job['title'] }}</a>
+        </h3>
+        <div class="job-org">
+          <span>{{ job['company_name'] }}</span>
+          {% if job['is_demo'] %}<span class="badge badge-demo">Demo</span>{% endif %}
+        </div>
+      </div>
+      <div class="right">{{ score_badge(match) }}</div>
+    </div>
+
+    <div class="job-facts">
+      <span class="row">{{ icon('pin', 13) }} {{ job['location'] or 'Not specified' }}</span>
+      <span class="row">{{ icon('money', 13) }} {{ job|stipend_range }}</span>
+      <span class="row">{{ icon('calendar', 13) }} {{ job['duration_months'] }} months</span>
+      <span class="row">{{ icon('award', 13) }} {{ job['qualification'] }}</span>
+    </div>
+
+    {% if card.skills and card.skills.get('required') %}
+      <div class="job-skills">
+        <div class="eyebrow mb1">Required</div>
+        {% if match %}
+          {{ skill_status_chips(card.skills['required'], match.matched_skills) }}
+        {% else %}
+          {{ skill_chips(card.skills['required'], 'skill', 6) }}
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if show_actions %}
+      <div class="job-foot">
+        <a class="btn btn-sm" href="{{ url_for('internship_detail', internship_id=job['id']) }}">View details</a>
+        {% if user_role == 'student' %}
+          {% if card.applied %}
+            <span class="badge badge-ok">{{ icon('check', 12) }} Applied</span>
+          {% else %}
+            <form method="post" action="{{ url_for('apply_internship', internship_id=job['id']) }}" class="inline">
+              <button class="btn btn-sm btn-primary" type="submit">Apply</button>
+            </form>
+          {% endif %}
+          <form method="post" action="{{ url_for('save_internship', internship_id=job['id']) }}" class="inline">
+            <button class="btn btn-sm btn-quiet" type="submit">
+              {{ icon('bookmark', 13) }} {{ 'Saved' if card.saved else 'Save' }}
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    {% endif %}
+  </article>
+{% endmacro %}
+
+
+{% macro breakdown_table(match) %}
+  <table class="breakdown">
+    <thead>
+      <tr>
+        <th>Factor</th><th class="num">Weight</th><th class="num">Score</th>
+        <th class="cell-meter"></th><th class="num">Points</th><th>Reason</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for part in match.breakdown %}
+        <tr>
+          <td><strong>{{ part.label }}</strong></td>
+          <td class="num">{{ part.weight }}%</td>
+          <td class="num">{{ part.percent }}%</td>
+          <td class="cell-meter">{{ meter(part.percent, 'ok' if part.ok else 'warn') }}</td>
+          <td class="num">{{ part.points }}</td>
+          <td>{{ part.detail }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td>Total</td><td class="num">100%</td><td></td><td></td>
+        <td class="num">{{ match.rule_score }}</td>
+        <td>Displayed as {{ match.score }}%</td>
+      </tr>
+    </tfoot>
+  </table>
+{% endmacro %}
+
+
+{# The ML ordering is never applied silently: sorting by the blended key while
+   showing the rule score would render a 74% above a 77% and look broken. #}
+{% macro sort_toggle(sort_by, sort_options) %}
+  <div class="resultbar">
+    <span class="eyebrow">Sort</span>
+    <span class="segmented">
+      {% for key, meta in sort_options.items() %}
+        {% set args = dict(request.args) %}
+        {% set _ = args.update({'sort': key}) %}
+        <a href="{{ url_for(request.endpoint, **dict(request.view_args, **args)) }}"
+           {% if sort_by == key %}aria-current="true"{% endif %}
+           title="{{ meta[1] }}">{{ meta[0] }}</a>
+      {% endfor %}
+    </span>
+    <span class="t-xs muted">{{ sort_options[sort_by][1] }}</span>
+  </div>
+{% endmacro %}
+
+
+{% macro demand_supply_chart(rows, note='') %}
+  <div class="chart-legend">
+    <span class="key"><i class="swatch swatch-1"></i> Industry demand &mdash; % of internships</span>
+    <span class="key"><i class="swatch swatch-2"></i> Student availability &mdash; % of students</span>
+  </div>
+  {% for row in rows %}
+    {# --i staggers the bar reveal by 45ms per row (see .track-fill in style.css) #}
+    <div class="bars-row" style="--i: {{ loop.index0 }}">
+      <div class="bars-label">{{ row.skill }}<small>{{ row.category }}</small></div>
+      <div class="bars">
+        {# A zero value renders no bar at all. The fill has a 2px min-width so
+           small values stay visible, which at exactly 0% would otherwise draw a
+           misleading sliver where the real answer is "none". #}
+        <div class="track" title="{{ row.skill }}: required by {{ row.demand_count }} internships ({{ row.demand_percent }}%)">
+          {% if row.demand_percent > 0 %}
+            <div class="track-fill fill-1" style="width: {{ row.demand_percent }}%"></div>
+          {% endif %}
+        </div>
+        <div class="track" title="{{ row.skill }}: held by {{ row.supply_count }} students ({{ row.supply_percent }}%)">
+          {% if row.supply_percent > 0 %}
+            <div class="track-fill fill-2" style="width: {{ row.supply_percent }}%"></div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="bars-value">
+        {{ row.demand_percent }}% / {{ row.supply_percent }}%<br>
+        {% if row.gap > 0 %}
+          <span class="flag flag-{{ row.severity }}">{{ icon('arrow-up', 12) }} {{ row.gap }} gap</span>
+        {% else %}
+          <span class="flag flag-good">{{ icon('check', 12) }} covered</span>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+  {% if note %}<p class="note">{{ note }}</p>{% endif %}
+{% endmacro %}
+
+
+{% macro severity_flag(severity, gap=None) %}
+  {% set words = {'critical': 'Critical', 'serious': 'High', 'warning': 'Medium', 'good': 'Low'} %}
+  <span class="flag flag-{{ severity }}">
+    {{ icon('check' if severity == 'good' else 'arrow-up', 12) }}
+    {{ words.get(severity, severity)|title }}{% if gap is not none %} &middot; {{ gap }}{% endif %}
+  </span>
+{% endmacro %}

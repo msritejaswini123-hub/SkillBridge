@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% from "_macros.html" import skill_chips, skill_status_chips, breakdown_table with context %}
+{% from "_icons.html" import icon %}
+{% block title %}{{ internship['title'] }}{% endblock %}
+
+{% block content %}
+<div class="crumb">
+  <a class="row" href="{{ url_for('internships') }}">Internships</a> / {{ internship['title'] }}
+</div>
+
+<div class="head">
+  <div>
+    <h1>{{ internship['title'] }}</h1>
+    <div class="head-sub row-2" style="flex-wrap:wrap">
+      <strong>{{ internship['company_name'] }}</strong>
+      {% if internship['industry'] %}<span class="muted">{{ internship['industry'] }}</span>{% endif %}
+      {% if internship['is_demo'] %}<span class="badge badge-demo">Demo listing</span>{% endif %}
+      {% if not internship['is_active'] %}<span class="badge badge-bad">Closed</span>{% endif %}
+    </div>
+  </div>
+  {% if match %}
+    <div class="head-actions">
+      <span class="score score-{{ match.score|score_class }}" style="font-size:15px;padding:3px 10px">
+        {{ match.score }}%<small>match</small>
+      </span>
+    </div>
+  {% endif %}
+</div>
+
+<div class="grid grid-2">
+  {# ---------------- left: the role ---------------- #}
+  <div>
+    {% if match %}
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Your match</h2>
+          {% if match.ml_score is not none %}
+            <span class="badge" title="Logistic regression trained on synthetic demo data. Affects ordering only, never this score.">
+              ML likelihood {{ match.ml_score|round|int }}%
+            </span>
+          {% endif %}
+        </div>
+        <div class="panel-body">
+          <div class="score-hero mb3">
+            <span class="score-hero-num">{{ match.score }}%</span>
+            <span class="score-hero-unit">weighted match</span>
+          </div>
+
+          <div class="chips mb3">
+            {% for part in match.breakdown %}
+              <span class="badge {{ 'badge-ok' if part.ok else 'badge-bad' }}">
+                {{ icon('check' if part.ok else 'x', 12) }} {{ part.label }}
+              </span>
+            {% endfor %}
+          </div>
+
+          <div class="eyebrow mb1">Matched skills</div>
+          {% if match.matched_skills %}
+            <span class="chips">
+              {% for name in match.matched_skills %}
+                <span class="badge badge-ok">{{ icon('check', 12) }} {{ name }}</span>
+              {% endfor %}
+            </span>
+          {% else %}
+            <p class="t-sm muted">None of the listed skills are on your profile yet.</p>
+          {% endif %}
+
+          <div class="eyebrow mb1 mt3">Missing skills</div>
+          {% if match.missing_skills %}
+            <span class="chips">
+              {% for name in match.missing_skills %}
+                <span class="badge badge-bad">{{ icon('x', 12) }} {{ name }}</span>
+              {% endfor %}
+            </span>
+          {% else %}
+            <span class="badge badge-ok">{{ icon('check', 12) }} You have every skill listed</span>
+          {% endif %}
+        </div>
+        <div class="panel-foot">
+          <div class="btns">
+            {% if already_applied %}
+              <span class="badge badge-ok">{{ icon('check', 12) }} Applied</span>
+              <a class="btn btn-sm" href="{{ url_for('student_applications') }}">Track status</a>
+            {% elif internship['is_active'] %}
+              <form method="post" action="{{ url_for('apply_internship', internship_id=internship['id']) }}" class="inline">
+                <button class="btn btn-primary" type="submit">Apply now</button>
+              </form>
+            {% else %}
+              <span class="badge badge-bad">This internship is closed</span>
+            {% endif %}
+            <form method="post" action="{{ url_for('save_internship', internship_id=internship['id']) }}" class="inline">
+              <button class="btn btn-sm" type="submit">
+                {{ icon('bookmark', 13) }} {{ 'Saved' if is_saved else 'Save' }}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-head"><h2>Details</h2></div>
+      <div class="scroll-x">
+        <table class="data">
+          <tbody>
+            <tr><th style="width:34%">Location</th><td>{{ internship['location'] or 'Not specified' }}</td></tr>
+            <tr><th>Stipend</th><td>{{ internship|stipend_range }}</td></tr>
+            <tr><th>Duration</th><td>{{ internship['duration_months'] }} months</td></tr>
+            <tr><th>Qualification</th><td>{{ internship['qualification'] }}</td></tr>
+            <tr><th>Openings</th><td>{{ internship['openings'] }}</td></tr>
+            <tr><th>Applicants</th><td>{{ applicant_count }}</td></tr>
+            <tr><th>Domain</th><td>{{ internship['domain'] }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Description</h2></div>
+      <div class="panel-body">
+        <p class="secondary" style="white-space:pre-line;margin:0">{{ internship['description'] or 'No description provided.' }}</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>About {{ internship['company_name'] }}</h3></div>
+      <div class="panel-body">
+        <p class="secondary">{{ internship['about'] or 'No company description provided.' }}</p>
+        <p class="hint mb0">
+          {%- if internship['hq'] %}Head office: {{ internship['hq'] }}{% endif %}
+          {%- if internship['website'] %} &middot; {{ internship['website'] }}{% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  {# ---------------- right: skills, breakdown, courses ---------------- #}
+  <div>
+    <div class="panel">
+      <div class="panel-head"><h2>Skills required</h2></div>
+      <div class="panel-body">
+        {% if skills['required'] %}
+          <div class="eyebrow mb1">Must have</div>
+          {% if match %}
+            {{ skill_status_chips(skills['required'], match.matched_skills) }}
+          {% else %}{{ skill_chips(skills['required']) }}{% endif %}
+        {% else %}
+          <p class="muted">No required skills listed.</p>
+        {% endif %}
+
+        {% if skills['preferred'] %}
+          <div class="eyebrow mb1 mt3">Nice to have <span class="badge">counts half</span></div>
+          {% if match %}
+            <span class="chips">
+              {% for name in skills['preferred'] %}
+                {% if name in match.matched_skills %}
+                  <span class="badge badge-ok">{{ icon('check', 12) }} {{ name }}</span>
+                {% else %}
+                  <span class="badge badge-pref">{{ icon('circle', 12) }} {{ name }}</span>
+                {% endif %}
+              {% endfor %}
+            </span>
+          {% else %}{{ skill_chips(skills['preferred'], 'pref') }}{% endif %}
+        {% endif %}
+      </div>
+    </div>
+
+    {% if match %}
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Score breakdown</h3>
+            <div class="panel-head-sub">Points = weight &times; your score. The total is the {{ match.score }}% above.</div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="scroll-x">{{ breakdown_table(match) }}</div>
+        </div>
+        <div class="panel-foot">
+          Nothing here is hardcoded &mdash; change your location or stipend on your profile
+          and these numbers move.
+        </div>
+      </div>
+
+      {% if courses %}
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Close the gap</h3>
+              <div class="panel-head-sub">Free resources for the skills this role wants</div>
+            </div>
+            <a class="btn btn-sm" href="{{ url_for('student_skill_gap') }}">Full plan</a>
+          </div>
+          <div class="scroll-x">
+            <table class="data">
+              <thead><tr><th>Skill</th><th>Course</th><th>Provider</th><th>Time</th></tr></thead>
+              <tbody>
+                {% for course in courses %}
+                  <tr>
+                    <td><span class="badge badge-bad">{{ course['skill'] }}</span></td>
+                    <td>
+                      {% if course['url'] %}
+                        <a href="{{ course['url'] }}" target="_blank" rel="noopener noreferrer">{{ course['title'] }}</a>
+                      {% else %}{{ course['title'] }}{% endif %}
+                    </td>
+                    <td>{{ course['provider'] }}</td>
+                    <td class="nowrap">{{ course['duration'] }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+
+    {% elif user_role == 'student' %}
+      <div class="panel">
+        <div class="empty">
+          {{ icon('tag', 26) }}
+          <h3>Add your skills to see your match</h3>
+          <p>We need your skill list before we can score this role.</p>
+          <a class="btn btn-primary" href="{{ url_for('student_resume') }}">Upload resume</a>
+        </div>
+      </div>
+    {% else %}
+      <div class="panel">
+        <div class="empty">
+          {{ icon('target', 26) }}
+          <h3>See your match score</h3>
+          <p>Sign in as a student to see matched skills, missing skills and your weighted
+             score for this role.</p>
+          <div class="btns" style="justify-content:center">
+            <a class="btn btn-primary" href="{{ url_for('login') }}">Sign in</a>
+            <a class="btn" href="{{ url_for('register') }}">Create account</a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1941 >>
+stream
+BT
+/F1 11 Tf
+15 TL
+1 0 0 1 56 780 Tm
+(RAHUL VERMA) Tj
+T*
+(Hyderabad, Telangana  |  rahul.verma@example.com  |  +91 90000 00001) Tj
+T*
+(github.com/rahulverma  |  linkedin.com/in/rahulverma) Tj
+T*
+() Tj
+T*
+(OBJECTIVE) Tj
+T*
+(B.Tech CSE student seeking a software development internship where I can apply) Tj
+T*
+(my Python and web development skills to real production systems.) Tj
+T*
+() Tj
+T*
+(EDUCATION) Tj
+T*
+(B.Tech CSE - CVR College of Engineering, Hyderabad) Tj
+T*
+(Expected graduation 2026  |  CGPA 8.4 / 10) Tj
+T*
+(Intermediate MPC - Narayana Junior College, 2022  |  94%) Tj
+T*
+() Tj
+T*
+(TECHNICAL SKILLS) Tj
+T*
+(Languages: Python, C, C++, SQL) Tj
+T*
+(Web: HTML, CSS, JavaScript, Flask, REST API) Tj
+T*
+(Databases: MySQL, SQLite) Tj
+T*
+(Tools: Git, GitHub, VS Code, Postman) Tj
+T*
+(Core CS: Data Structures, Algorithms, OOP, DBMS, Operating Systems) Tj
+T*
+() Tj
+T*
+(PROJECTS) Tj
+T*
+(Student Result Portal - Python, Flask, SQLite, HTML, CSS) Tj
+T*
+(  Built a web portal where staff upload marks and students view results.) Tj
+T*
+(  Used Flask blueprints, Jinja templates and parameterised SQL queries.) Tj
+T*
+(  Version controlled with Git and deployed on a college server.) Tj
+T*
+(Weather Dashboard - Python, REST API, JavaScript) Tj
+T*
+(  Consumed a public weather REST API and charted a 7 day forecast.) Tj
+T*
+(Library Management System - C++, OOP) Tj
+T*
+(  Console application demonstrating inheritance and file handling.) Tj
+T*
+() Tj
+T*
+(EXPERIENCE) Tj
+T*
+(Web Development Intern - BrightLogic Software, Hyderabad) Tj
+T*
+(  3 months internship. Fixed bugs in a Flask reporting module, wrote SQL) Tj
+T*
+(  queries for a sales dashboard and raised 20+ reviewed pull requests.) Tj
+T*
+() Tj
+T*
+(CERTIFICATIONS) Tj
+T*
+(Python for Everybody - Coursera) Tj
+T*
+(SQL Basics - HackerRank) Tj
+T*
+() Tj
+T*
+(ACHIEVEMENTS) Tj
+T*
+(Runner up, college hackathon 2025 \(team of 4\)) Tj
+T*
+() Tj
+T*
+(LANGUAGES) Tj
+T*
+(English, Hindi, Telugu) Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002234 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2331
+%%EOF

@@ -1,0 +1,76 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 754 >>
+stream
+BT
+/F1 11 Tf
+15 TL
+1 0 0 1 56 780 Tm
+(ARJUN REDDY) Tj
+T*
+(Hyderabad  |  arjun.reddy@example.com) Tj
+T*
+() Tj
+T*
+(EDUCATION) Tj
+T*
+(B.Tech ECE - CVR College of Engineering, 2026  |  CGPA 7.8 / 10) Tj
+T*
+() Tj
+T*
+(TECHNICAL SKILLS) Tj
+T*
+(C, C++, Java, Python, SQL, MATLAB, Embedded C, IoT, Excel, Git) Tj
+T*
+() Tj
+T*
+(PROJECTS) Tj
+T*
+(Line Following Robot - Embedded C, 8051 microcontroller) Tj
+T*
+(  Wrote sensor driver code and PWM motor control.) Tj
+T*
+(Sensor Data Logger - Python, Excel) Tj
+T*
+(  Logged temperature readings over serial and produced daily reports.) Tj
+T*
+() Tj
+T*
+(EXPERIENCE) Tj
+T*
+(Hardware Lab Intern - 2 months, campus electronics lab) Tj
+T*
+() Tj
+T*
+(ACHIEVEMENTS) Tj
+T*
+(First place, inter-college robotics event 2025) Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001046 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1143
+%%EOF

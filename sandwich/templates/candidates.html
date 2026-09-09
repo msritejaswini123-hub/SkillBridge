@@ -1,0 +1,143 @@
+{% extends "dash_base.html" %}
+{% from "_macros.html" import score_badge, skill_chips, status_badge, meter, sort_toggle with context %}
+{% from "_icons.html" import icon %}
+{% block title %}Candidates{% endblock %}
+
+{% block dash %}
+<div class="head">
+  <div>
+    <h1>Candidates</h1>
+    <div class="head-sub">
+      Ranked against <strong>{{ internship['title'] }}</strong> &middot;
+      {{ internship['location'] }} &middot; {{ internship|stipend_range }}
+    </div>
+  </div>
+  <div class="head-actions">
+    <a class="btn" href="{{ url_for('post_internship') }}">{{ icon('plus', 13) }} New posting</a>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-body-tight">
+    <div class="row-2" style="flex-wrap:wrap;gap:12px">
+      <label class="eyebrow" for="posting-select">Posting</label>
+      <select id="posting-select" data-jump-base="{{ url_for('company_candidates') }}" style="max-width:400px">
+        {% for row in postings %}
+          <option value="{{ row['id'] }}" {{ 'selected' if row['id'] == internship['id'] }}>
+            {{ row['title'] }} — {{ row['location'] }}
+          </option>
+        {% endfor %}
+      </select>
+      <span class="badge">{{ postings|length }} posting{{ '' if postings|length == 1 else 's' }}</span>
+    </div>
+    <div class="mt2 t-sm">
+      <span class="eyebrow">Required</span> {{ skill_chips(skills['required']) }}
+      {% if skills['preferred'] %}
+        <span class="eyebrow">Preferred</span> {{ skill_chips(skills['preferred'], 'pref') }}
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if candidates %}
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-label">Ranked</span>
+      <div class="stat-value">{{ candidates|length }}</div>
+      <div class="stat-foot">with a skill profile</div>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Best match</span>
+      <div class="stat-value">{{ candidates[0].match.score }}%</div>
+      <div class="stat-foot">{{ candidates[0].student['name'] }}</div>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Above 70%</span>
+      <div class="stat-value">{{ candidates|selectattr('match.score', 'ge', 70)|list|length }}</div>
+      <div class="stat-foot">strong fits</div>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Already applied</span>
+      <div class="stat-value">{{ candidates|selectattr('application_status')|list|length }}</div>
+      <div class="stat-foot">of those ranked</div>
+    </div>
+  </div>
+
+  {{ sort_toggle(sort_by, sort_options) }}
+
+  <div class="panel">
+    <div class="scroll-x">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>#</th><th>Student</th><th>Qualification</th><th>Location</th>
+            <th class="num">Match</th><th>Matched</th><th>Missing</th><th>Applied</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in candidates %}
+            <tr>
+              <td><span class="rank {{ 'rank-1' if loop.first }}">{{ loop.index }}</span></td>
+              <td>
+                <strong>{{ row.student['name'] }}</strong>
+                <div class="t-xs muted">
+                  {{ row.student['college'] or '—' }}
+                  {%- if row.student['graduation_year'] %} &middot; {{ row.student['graduation_year'] }}{% endif %}
+                </div>
+              </td>
+              <td class="nowrap">{{ row.student['qualification'] }} {{ row.student['branch'] }}</td>
+              <td class="nowrap">{{ row.student['preferred_location'] or '—' }}</td>
+              <td class="num" style="min-width:96px">
+                {{ score_badge(row.match) }}
+                <div class="mt1">{{ meter(row.match.score, 'ok' if row.match.score >= 70 else 'warn') }}</div>
+              </td>
+              <td>
+                {% if row.match.matched_required %}
+                  <span class="chips">
+                    {% for name in row.match.matched_required %}
+                      <span class="badge badge-ok">{{ icon('check', 11) }} {{ name }}</span>
+                    {% endfor %}
+                  </span>
+                {% else %}<span class="t-xs muted">none</span>{% endif %}
+              </td>
+              <td>
+                {% if row.match.missing_required %}
+                  <span class="chips">
+                    {% for name in row.match.missing_required %}
+                      <span class="badge badge-bad">{{ icon('x', 11) }} {{ name }}</span>
+                    {% endfor %}
+                  </span>
+                {% else %}
+                  <span class="badge badge-ok">{{ icon('check', 11) }} all covered</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if row.application_status %}{{ status_badge(row.application_status) }}
+                {% else %}<span class="t-xs muted">not yet</span>{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="panel-foot">
+      Each student is scored with the same formula they see:
+      {{ (weights.skills * 100)|int }}% skills,
+      {{ (weights.qualification * 100)|int }}% qualification,
+      {{ (weights.location * 100)|int }}% location,
+      {{ (weights.stipend * 100)|int }}% stipend,
+      {{ (weights.experience * 100)|int }}% experience.
+      The ML figure is a shortlist probability trained on synthetic demo data and affects
+      ordering only. <a href="{{ url_for('ml_info') }}">Methodology</a>
+    </div>
+  </div>
+{% else %}
+  <div class="panel">
+    <div class="empty">
+      {{ icon('target', 28) }}
+      <h3>No students to rank yet</h3>
+      <p>We can only rank students who have built a skill profile.</p>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

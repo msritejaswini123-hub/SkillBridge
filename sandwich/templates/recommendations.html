@@ -1,0 +1,74 @@
+{% extends "dash_base.html" %}
+{% from "_macros.html" import job_row, sort_toggle with context %}
+{% from "_icons.html" import icon %}
+{% block title %}Recommendations{% endblock %}
+
+{% block dash %}
+<div class="head">
+  <div>
+    <h1>Recommendations</h1>
+    <div class="head-sub">
+      Ranked from your {{ skills|length }} skills,
+      {{ profile['qualification'] or 'no qualification set' }}{% if profile['branch'] %} {{ profile['branch'] }}{% endif %},
+      preferred location <strong>{{ profile['preferred_location'] or 'any' }}</strong>,
+      stipend <strong>{{ profile['min_stipend']|rupees }}&ndash;{{ profile['max_stipend']|rupees }}</strong>.
+    </div>
+  </div>
+  <div class="head-actions">
+    <a class="btn" href="{{ url_for('student_profile') }}">Change preferences</a>
+  </div>
+</div>
+
+{% if not skills %}
+  <div class="panel">
+    <div class="empty">
+      {{ icon('tag', 28) }}
+      <h3>Add your skills first</h3>
+      <p>Skills are 50% of the match score, so there is nothing to rank yet.</p>
+      <div class="btns" style="justify-content:center">
+        <a class="btn btn-primary" href="{{ url_for('student_resume') }}">Upload resume</a>
+        <a class="btn" href="{{ url_for('student_skills') }}">Add manually</a>
+      </div>
+    </div>
+  </div>
+{% else %}
+
+  <div class="note-box">
+    {{ icon('info', 14) }}
+    <span>
+      <strong>Score composition:</strong>
+      skills {{ (weights.skills * 100)|int }}%,
+      qualification {{ (weights.qualification * 100)|int }}%,
+      location {{ (weights.location * 100)|int }}%,
+      stipend {{ (weights.stipend * 100)|int }}%,
+      experience {{ (weights.experience * 100)|int }}%.
+      Open any role to see the full arithmetic.
+      <a href="{{ url_for('ml_info') }}">Methodology</a>
+    </span>
+  </div>
+
+  {% include "_filters.html" %}
+
+  <div class="resultbar">
+    <strong>{{ cards|length }}</strong> internship{{ '' if cards|length == 1 else 's' }}
+    {% if cards %}<span class="badge">best match {{ cards[0].match.score }}%</span>{% endif %}
+  </div>
+
+  {{ sort_toggle(sort_by, sort_options) }}
+
+  <div class="grid cards">
+    {% for card in cards %}{{ job_row(card) }}{% endfor %}
+  </div>
+
+  {% if not cards %}
+    <div class="panel">
+      <div class="empty">
+        {{ icon('search', 28) }}
+        <h3>Nothing matches those filters</h3>
+        <p>Clear the filters, or widen your stipend range on your profile.</p>
+        <a class="btn" href="{{ url_for('student_recommendations') }}">Clear filters</a>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}
+{% endblock %}
