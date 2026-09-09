@@ -1,46 +1,51 @@
 {% extends "base.html" %}
-{% from "_macros.html" import job_card %}
-{% block title %}All internships{% endblock %}
+{% from "_macros.html" import job_row with context %}
+{% from "_icons.html" import icon %}
+{% block title %}Internships{% endblock %}
 
 {% block content %}
-<div class="page-head">
+<div class="head">
   <div>
-    <h1>All internships</h1>
-    <p>
+    <h1>Internships</h1>
+    <div class="head-sub">
       {% if profile %}
         Every active internship, ordered by how well it matches your profile.
       {% else %}
-        Browse every active internship. <a href="{{ url_for('login') }}">Log in as a student</a>
-        to see your personal match score on each one.
+        Every active internship. <a href="{{ url_for('login') }}">Sign in as a student</a>
+        to see your match score on each one.
       {% endif %}
-    </p>
+    </div>
   </div>
   {% if user_role == 'student' %}
-    <a class="btn btn-primary" href="{{ url_for('student_recommendations') }}">★ My recommendations</a>
+    <div class="head-actions">
+      <a class="btn btn-primary" href="{{ url_for('student_recommendations') }}">My recommendations</a>
+    </div>
   {% endif %}
 </div>
 
 {% include "_filters.html" %}
 
-<div class="filter-summary">
-  <strong>{{ cards|length }}</strong> internship{{ '' if cards|length == 1 else 's' }} found
-  {% if filters.q %}<span class="badge badge-cat">search: {{ filters.q }}</span>{% endif %}
-  {% if filters.location %}<span class="badge badge-cat">{{ filters.location }}</span>{% endif %}
-  {% if filters.domain %}<span class="badge badge-cat">{{ filters.domain }}</span>{% endif %}
-  {% if filters.skill %}<span class="badge badge-cat">needs {{ filters.skill }}</span>{% endif %}
-  {% if filters.min_stipend %}<span class="badge badge-cat">Rs {{ filters.min_stipend|rupees }}+</span>{% endif %}
+<div class="resultbar">
+  <strong>{{ cards|length }}</strong> result{{ '' if cards|length == 1 else 's' }}
+  {% if filters.q %}<span class="badge">{{ icon('search', 11) }} {{ filters.q }}</span>{% endif %}
+  {% if filters.location %}<span class="badge">{{ filters.location }}</span>{% endif %}
+  {% if filters.domain %}<span class="badge">{{ filters.domain }}</span>{% endif %}
+  {% if filters.skill %}<span class="badge">needs {{ filters.skill }}</span>{% endif %}
+  {% if filters.min_stipend %}<span class="badge">{{ filters.min_stipend|rupees }}+</span>{% endif %}
 </div>
 
-<div class="grid grid-cards">
-  {% for card in cards %}{{ job_card(card) }}{% endfor %}
+<div class="grid cards">
+  {% for card in cards %}{{ job_row(card) }}{% endfor %}
 </div>
 
 {% if not cards %}
-  <div class="empty">
-    <span class="empty-ico">🔍</span>
-    <h3>No internships match those filters</h3>
-    <p>Try a broader search.</p>
-    <a class="btn mt2" href="{{ url_for('internships') }}">Clear all filters</a>
+  <div class="panel">
+    <div class="empty">
+      {{ icon('search', 28) }}
+      <h3>No internships match those filters</h3>
+      <p>Try a broader search.</p>
+      <a class="btn" href="{{ url_for('internships') }}">Clear filters</a>
+    </div>
   </div>
 {% endif %}
 {% endblock %}

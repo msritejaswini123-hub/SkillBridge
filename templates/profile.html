@@ -1,126 +1,139 @@
 {% extends "dash_base.html" %}
-{% from "_macros.html" import skill_badges, meter %}
-{% block title %}My profile{% endblock %}
+{% from "_macros.html" import skill_chips, meter with context %}
+{% from "_icons.html" import icon %}
+{% block title %}Profile details{% endblock %}
 
 {% block dash %}
-<div class="page-head">
+<div class="head">
   <div>
-    <h1>My profile</h1>
-    <p>These four things drive your match score: qualification, branch, preferred location and expected stipend.</p>
+    <h1>Profile details</h1>
+    <div class="head-sub">Qualification, branch, preferred location and expected stipend together
+      account for 45% of every match score.</div>
   </div>
-  <span class="badge {{ 'badge-have' if completion >= 80 else 'badge-demo' }} badge-lg">{{ completion }}% complete</span>
+  <span class="badge {{ 'badge-ok' if completion >= 80 else 'badge-warn' }}">{{ completion }}% complete</span>
 </div>
 
-<div class="card">
-  {{ meter(completion, 'good' if completion >= 80 else 'warning') }}
+<form method="post" novalidate>
+  <div class="panel">
+    <div class="panel-body">
+      <fieldset>
+        <div class="legend">Education</div>
+        <div class="form-2">
+          <div class="field">
+            <label for="qualification">Degree</label>
+            <input list="degree-list" type="text" id="qualification" name="qualification"
+                   value="{{ profile['qualification'] or '' }}" placeholder="B.Tech">
+            <datalist id="degree-list">
+              {% for degree in degrees %}<option value="{{ degree }}">{% endfor %}
+            </datalist>
+          </div>
+          <div class="field">
+            <label for="branch">Branch</label>
+            <input list="branch-list" type="text" id="branch" name="branch"
+                   value="{{ profile['branch'] or '' }}" placeholder="CSE">
+            <datalist id="branch-list">
+              {% for branch in branches %}<option value="{{ branch }}">{% endfor %}
+            </datalist>
+          </div>
+          <div class="field">
+            <label for="college">College</label>
+            <input type="text" id="college" name="college" value="{{ profile['college'] or '' }}">
+          </div>
+          <div class="field">
+            <label for="graduation_year">Graduation year</label>
+            <input type="number" id="graduation_year" name="graduation_year" min="1990" max="2040"
+                   value="{{ profile['graduation_year'] or '' }}" placeholder="2026">
+          </div>
+        </div>
+      </fieldset>
 
-  <form method="post" novalidate>
-    <fieldset>
-      <legend>Education</legend>
-      <div class="form-grid">
-        <div class="field">
-          <label for="qualification">Qualification / degree</label>
-          <input list="degree-list" type="text" id="qualification" name="qualification"
-                 value="{{ profile['qualification'] or '' }}" placeholder="B.Tech">
-          <datalist id="degree-list">
-            {% for degree in degrees %}<option value="{{ degree }}">{% endfor %}
-          </datalist>
+      <fieldset>
+        <div class="legend">Internship preferences</div>
+        <div class="form-2">
+          <div class="field">
+            <label for="preferred_location">Preferred location</label>
+            <input list="location-list" type="text" id="preferred_location" name="preferred_location"
+                   value="{{ profile['preferred_location'] or '' }}" placeholder="Hyderabad">
+            <datalist id="location-list">
+              {% for location in locations %}<option value="{{ location }}">{% endfor %}
+              <option value="Remote"><option value="Any">
+            </datalist>
+            <div class="hint">Enter <code>Any</code> if flexible, or <code>Remote</code> for remote only.</div>
+          </div>
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input type="tel" id="phone" name="phone" value="{{ profile['phone'] or '' }}">
+          </div>
+          <div class="field">
+            <label for="min_stipend">Minimum stipend (per month)</label>
+            <input type="number" id="min_stipend" name="min_stipend" min="0" step="500"
+                   value="{{ profile['min_stipend'] or 0 }}">
+          </div>
+          <div class="field">
+            <label for="max_stipend">Maximum stipend (per month)</label>
+            <input type="number" id="max_stipend" name="max_stipend" min="0" step="500"
+                   value="{{ profile['max_stipend'] or 0 }}">
+          </div>
         </div>
-        <div class="field">
-          <label for="branch">Branch / specialisation</label>
-          <input list="branch-list" type="text" id="branch" name="branch"
-                 value="{{ profile['branch'] or '' }}" placeholder="CSE">
-          <datalist id="branch-list">
-            {% for branch in branches %}<option value="{{ branch }}">{% endfor %}
-          </datalist>
-        </div>
-        <div class="field">
-          <label for="college">College</label>
-          <input type="text" id="college" name="college" value="{{ profile['college'] or '' }}">
-        </div>
-        <div class="field">
-          <label for="graduation_year">Graduation year</label>
-          <input type="number" id="graduation_year" name="graduation_year" min="1990" max="2040"
-                 value="{{ profile['graduation_year'] or '' }}" placeholder="2026">
-        </div>
-      </div>
-    </fieldset>
+      </fieldset>
 
-    <fieldset>
-      <legend>Internship preferences</legend>
-      <div class="form-grid">
-        <div class="field">
-          <label for="preferred_location">Preferred location</label>
-          <input list="location-list" type="text" id="preferred_location" name="preferred_location"
-                 value="{{ profile['preferred_location'] or '' }}" placeholder="Hyderabad">
-          <datalist id="location-list">
-            {% for location in locations %}<option value="{{ location }}">{% endfor %}
-            <option value="Remote"><option value="Any">
-          </datalist>
-          <div class="hint">Type <strong>Any</strong> if you are flexible, or <strong>Remote</strong> for remote only.</div>
+      <fieldset>
+        <div class="legend">Experience and projects</div>
+        <div class="field" style="max-width:220px">
+          <label for="experience_months">Prior experience (months)</label>
+          <input type="number" id="experience_months" name="experience_months" min="0" max="120"
+                 value="{{ profile['experience_months'] or 0 }}">
+          <div class="hint">6 months or more scores full marks.</div>
         </div>
         <div class="field">
-          <label for="phone">Phone</label>
-          <input type="tel" id="phone" name="phone" value="{{ profile['phone'] or '' }}">
+          <label for="projects_text">Projects</label>
+          <textarea id="projects_text" name="projects_text" rows="5"
+                    placeholder="Student Result Portal &mdash; Python, Flask, SQLite">{{ profile['projects_text'] or '' }}</textarea>
+          <div class="hint">Naming the technology you used feeds the project-relevance score.</div>
         </div>
-        <div class="field">
-          <label for="min_stipend">Minimum expected stipend (Rs / month)</label>
-          <input type="number" id="min_stipend" name="min_stipend" min="0" step="500"
-                 value="{{ profile['min_stipend'] or 0 }}">
-        </div>
-        <div class="field">
-          <label for="max_stipend">Maximum expected stipend (Rs / month)</label>
-          <input type="number" id="max_stipend" name="max_stipend" min="0" step="500"
-                 value="{{ profile['max_stipend'] or 0 }}">
-        </div>
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <legend>Experience &amp; projects</legend>
-      <div class="field">
-        <label for="experience_months">Prior internship / work experience (months)</label>
-        <input type="number" id="experience_months" name="experience_months" min="0" max="120"
-               value="{{ profile['experience_months'] or 0 }}" style="max-width:160px">
-        <div class="hint">6 months or more scores full marks on the experience factor.</div>
-      </div>
-      <div class="field">
-        <label for="projects_text">Projects</label>
-        <textarea id="projects_text" name="projects_text" rows="5"
-                  placeholder="Student Result Portal - Python, Flask, SQLite">{{ profile['projects_text'] or '' }}</textarea>
-        <div class="hint">Mentioning the technology you used helps the project-relevance score.</div>
-      </div>
-    </fieldset>
-
-    <div class="btn-row">
-      <button class="btn btn-primary btn-lg" type="submit">Save profile</button>
-      <a class="btn" href="{{ url_for('student_recommendations') }}">Save later, see matches</a>
+      </fieldset>
     </div>
-  </form>
-</div>
-
-<div class="card">
-  <div class="card-head">
-    <h3 class="mb0">My skills ({{ skills|length }})</h3>
-    <div class="btn-row">
-      <a class="btn btn-sm" href="{{ url_for('student_resume') }}">Re-upload resume</a>
-      <a class="btn btn-sm" href="{{ url_for('student_skills') }}">Edit skills</a>
+    <div class="panel-foot">
+      <div class="btns">
+        <button class="btn btn-primary" type="submit">Save changes</button>
+        <a class="btn btn-quiet" href="{{ url_for('student_recommendations') }}">Cancel</a>
+      </div>
     </div>
   </div>
-  {% if skills %}{{ skill_badges(skills) }}
-  {% else %}<p class="secondary mb0">No skills yet. <a href="{{ url_for('student_resume') }}">Upload your resume</a> to get started.</p>{% endif %}
-</div>
+</form>
 
-<div class="card">
-  <div class="card-head"><h3 class="mb0">Resume</h3></div>
-  {% if profile['resume_filename'] %}
-    <p class="mb0">
-      <span class="badge badge-have">✓ Uploaded</span>
-      <a href="{{ url_for('student_resume_file') }}" target="_blank" rel="noopener">Open my resume</a>
-      <span class="tiny muted">({{ profile['resume_filename'] }})</span>
-    </p>
-  {% else %}
-    <p class="secondary mb0">No resume uploaded yet. <a href="{{ url_for('student_resume') }}">Upload one now →</a></p>
-  {% endif %}
+<div class="grid grid-2">
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Skills &middot; {{ skills|length }}</h3>
+      <a class="btn btn-sm" href="{{ url_for('student_skills') }}">Edit</a>
+    </div>
+    <div class="panel-body">
+      {% if skills %}{{ skill_chips(skills) }}
+      {% else %}
+        <p class="muted mb0">None yet. <a href="{{ url_for('student_resume') }}">Upload your resume</a>.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Resume</h3>
+      <a class="btn btn-sm" href="{{ url_for('student_resume') }}">{{ icon('upload', 13) }} Replace</a>
+    </div>
+    <div class="panel-body">
+      {% if profile['resume_filename'] %}
+        <p class="mb0 row-2">
+          <span class="badge badge-ok">{{ icon('check', 12) }} Uploaded</span>
+          <a class="row" href="{{ url_for('student_resume_file') }}" target="_blank" rel="noopener">
+            Open {{ icon('external', 12) }}
+          </a>
+        </p>
+      {% else %}
+        <p class="muted mb0">No resume uploaded.
+          <a href="{{ url_for('student_resume') }}">Upload one</a>.</p>
+      {% endif %}
+    </div>
+  </div>
 </div>
 {% endblock %}

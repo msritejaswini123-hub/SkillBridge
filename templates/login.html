@@ -1,42 +1,48 @@
 {% extends "base.html" %}
-{% block title %}Log in{% endblock %}
+{% block title %}Sign in{% endblock %}
 
 {% block body %}
-<div class="wrap-narrow">
-  <div class="card">
-    <h1>Log in</h1>
-    <p class="secondary">Welcome back. Log in to see your matches.</p>
+<div class="wrap-sm">
+  <div class="panel">
+    <div class="panel-body">
+      <h1 class="mb1">Sign in</h1>
+      <p class="head-sub mb3">Welcome back.</p>
 
-    <form method="post" novalidate>
-      <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
-      <div class="field">
-        <label for="email">Email address</label>
-        <input type="email" id="email" name="email" value="{{ email }}" required autofocus autocomplete="email">
-      </div>
-      <div class="field">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" required autocomplete="current-password">
-      </div>
-      <button class="btn btn-primary btn-block btn-lg" type="submit">Log in</button>
-    </form>
+      <form method="post" novalidate>
+        <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" value="{{ email }}" required autofocus autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required autocomplete="current-password">
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" type="submit">Sign in</button>
+      </form>
 
-    <p class="mt3 center secondary">No account yet? <a href="{{ url_for('register') }}">Register here</a></p>
+      <p class="t-sm muted center mt3 mb0">
+        No account? <a href="{{ url_for('register') }}">Create one</a>
+      </p>
+    </div>
   </div>
 
-  <div class="card">
-    <h3>Demo accounts</h3>
-    <p class="tiny muted">Password for every demo account: <strong>demo1234</strong></p>
-    <div class="table-scroll">
+  <div class="panel">
+    <div class="panel-head">
+      <h3>Demo accounts</h3>
+      <span class="badge">demo1234</span>
+    </div>
+    <div class="scroll-x">
       <table class="data">
-        <thead><tr><th>Role</th><th>Email</th><th>What to look at</th></tr></thead>
         <tbody>
-          <tr><td><span class="badge badge-skill">Student</span></td><td>rahul@demo.com</td><td>Resume, skills, recommendations, skill gap</td></tr>
-          <tr><td><span class="badge badge-skill">Student</span></td><td>priya@demo.com</td><td>A different skill set, different ranking</td></tr>
-          <tr><td><span class="badge badge-skill">Company</span></td><td>hr@technova.com</td><td>Post internships, ranked candidates</td></tr>
-          <tr><td><span class="badge badge-skill">College</span></td><td>dean@cvr.edu.in</td><td>Skill demand vs supply, gaps, placements</td></tr>
+          <tr><td><span class="badge">Student</span></td><td><code>rahul@demo.com</code></td></tr>
+          <tr><td><span class="badge">Student</span></td><td><code>priya@demo.com</code></td></tr>
+          <tr><td><span class="badge">Company</span></td><td><code>hr@technova.com</code></td></tr>
+          <tr><td><span class="badge">College</span></td><td><code>dean@cvr.edu.in</code></td></tr>
         </tbody>
       </table>
     </div>
+    <div class="panel-foot">The password for every demo account is <code>demo1234</code>.</div>
   </div>
 </div>
 {% endblock %}

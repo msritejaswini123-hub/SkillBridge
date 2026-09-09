@@ -2,45 +2,49 @@
 {% block title %}Company profile{% endblock %}
 
 {% block dash %}
-<div class="page-head">
+<div class="head">
   <div>
     <h1>Company profile</h1>
-    <p>Students see this on every internship you post.</p>
+    <div class="head-sub">Students see this on every internship you post.</div>
   </div>
 </div>
 
-<div class="card">
-  <form method="post" novalidate>
-    <div class="field">
-      <label for="company_name">Company name *</label>
-      <input type="text" id="company_name" name="company_name" value="{{ company['company_name'] }}" required>
-    </div>
-    <div class="form-grid">
+<form method="post" novalidate>
+  <div class="panel">
+    <div class="panel-body">
       <div class="field">
-        <label for="industry">Industry</label>
-        <input type="text" id="industry" name="industry" value="{{ company['industry'] or '' }}"
-               placeholder="IT Services &amp; Product">
+        <label for="company_name">Company name <span class="req">*</span></label>
+        <input type="text" id="company_name" name="company_name" value="{{ company['company_name'] }}" required>
       </div>
-      <div class="field">
-        <label for="location">Head office city</label>
-        <input type="text" id="location" name="location" value="{{ company['location'] or '' }}"
-               placeholder="Hyderabad">
-      </div>
-      <div class="field full">
-        <label for="website">Website</label>
-        <input type="url" id="website" name="website" value="{{ company['website'] or '' }}"
-               placeholder="https://example.com">
-      </div>
-      <div class="field full">
-        <label for="about">About the company</label>
-        <textarea id="about" name="about" rows="5"
-                  placeholder="What you build, how big the team is, what an intern's experience looks like.">{{ company['about'] or '' }}</textarea>
+      <div class="form-2">
+        <div class="field">
+          <label for="industry">Industry</label>
+          <input type="text" id="industry" name="industry" value="{{ company['industry'] or '' }}"
+                 placeholder="IT Services &amp; Product">
+        </div>
+        <div class="field">
+          <label for="location">Head office city</label>
+          <input type="text" id="location" name="location" value="{{ company['location'] or '' }}"
+                 placeholder="Hyderabad">
+        </div>
+        <div class="field full">
+          <label for="website">Website</label>
+          <input type="url" id="website" name="website" value="{{ company['website'] or '' }}"
+                 placeholder="https://example.com">
+        </div>
+        <div class="field full">
+          <label for="about">About</label>
+          <textarea id="about" name="about" rows="5"
+                    placeholder="What you build, team size, what an intern's experience looks like.">{{ company['about'] or '' }}</textarea>
+        </div>
       </div>
     </div>
-    <div class="btn-row">
-      <button class="btn btn-primary btn-lg" type="submit">Save profile</button>
-      <a class="btn" href="{{ url_for('company_dashboard') }}">Back to dashboard</a>
+    <div class="panel-foot">
+      <div class="btns">
+        <button class="btn btn-primary" type="submit">Save changes</button>
+        <a class="btn btn-quiet" href="{{ url_for('company_dashboard') }}">Cancel</a>
+      </div>
     </div>
-  </form>
-</div>
+  </div>
+</form>
 {% endblock %}

@@ -1,23 +1,26 @@
 {% extends "dash_base.html" %}
-{% from "_macros.html" import skill_badges %}
+{% from "_macros.html" import skill_chips with context %}
+{% from "_icons.html" import icon %}
 {% block title %}My internships{% endblock %}
 
 {% block dash %}
-<div class="page-head">
+<div class="head">
   <div>
     <h1>My internships</h1>
-    <p>Everything {{ company['company_name'] }} has posted.</p>
+    <div class="head-sub">Everything {{ company['company_name'] }} has posted.</div>
   </div>
-  <a class="btn btn-primary" href="{{ url_for('post_internship') }}">＋ Post internship</a>
+  <div class="head-actions">
+    <a class="btn btn-primary" href="{{ url_for('post_internship') }}">{{ icon('plus', 13) }} Post internship</a>
+  </div>
 </div>
 
 {% if internships %}
-  <div class="card card-flush">
-    <div class="table-scroll">
+  <div class="panel">
+    <div class="scroll-x">
       <table class="data">
         <thead>
           <tr>
-            <th>Role</th><th>Location</th><th>Stipend</th><th>Duration</th>
+            <th>Role</th><th>Location</th><th>Stipend</th><th class="num">Months</th>
             <th>Required skills</th><th class="num">Applicants</th><th>Status</th><th></th>
           </tr>
         </thead>
@@ -26,23 +29,30 @@
             <tr>
               <td>
                 <a href="{{ url_for('internship_detail', internship_id=job['id']) }}"><strong>{{ job['title'] }}</strong></a>
-                {% if job['is_demo'] %}<span class="badge badge-demo tiny">Demo</span>{% endif %}
-                <br><span class="tiny muted">{{ job['domain'] }} &middot; {{ job['qualification'] }}</span>
+                {% if job['is_demo'] %}<span class="badge badge-demo">Demo</span>{% endif %}
+                <div class="t-xs muted">{{ job['domain'] }} &middot; {{ job['qualification'] }}</div>
               </td>
               <td class="nowrap">{{ job['location'] }}</td>
               <td class="nowrap">{{ job|stipend_range }}</td>
-              <td class="nowrap">{{ job['duration_months'] }} mo</td>
-              <td>{{ skill_badges(skills_map.get(job['id'], {}).get('required', []), 'skill', 4) }}</td>
+              <td class="num">{{ job['duration_months'] }}</td>
+              <td>{{ skill_chips(skills_map.get(job['id'], {}).get('required', []), 'skill', 4) }}</td>
               <td class="num">
                 {{ job['applicant_count'] }}
-                {% if job['shortlisted_count'] %}<br><span class="tiny muted">{{ job['shortlisted_count'] }} shortlisted</span>{% endif %}
+                {% if job['shortlisted_count'] %}
+                  <div class="t-xs muted">{{ job['shortlisted_count'] }} shortlisted</div>
+                {% endif %}
               </td>
-              <td>{% if job['is_active'] %}<span class="badge badge-have">Open</span>{% else %}<span class="badge badge-cat">Closed</span>{% endif %}</td>
+              <td>
+                {% if job['is_active'] %}<span class="badge badge-ok">Open</span>
+                {% else %}<span class="badge">Closed</span>{% endif %}
+              </td>
               <td class="nowrap">
-                <a class="btn btn-sm" href="{{ url_for('company_candidates', internship_id=job['id']) }}">Candidates</a>
-                <form method="post" action="{{ url_for('toggle_internship', internship_id=job['id']) }}" class="inline-form">
-                  <button class="btn btn-sm btn-ghost" type="submit">{{ 'Close' if job['is_active'] else 'Reopen' }}</button>
-                </form>
+                <div class="btns">
+                  <a class="btn btn-sm" href="{{ url_for('company_candidates', internship_id=job['id']) }}">Candidates</a>
+                  <form method="post" action="{{ url_for('toggle_internship', internship_id=job['id']) }}" class="inline">
+                    <button class="btn btn-sm btn-quiet" type="submit">{{ 'Close' if job['is_active'] else 'Reopen' }}</button>
+                  </form>
+                </div>
               </td>
             </tr>
           {% endfor %}
@@ -51,10 +61,12 @@
     </div>
   </div>
 {% else %}
-  <div class="empty">
-    <span class="empty-ico">📋</span>
-    <h3>Nothing posted yet</h3>
-    <a class="btn btn-primary mt2" href="{{ url_for('post_internship') }}">Post your first internship</a>
+  <div class="panel">
+    <div class="empty">
+      {{ icon('clipboard', 28) }}
+      <h3>Nothing posted yet</h3>
+      <a class="btn btn-primary" href="{{ url_for('post_internship') }}">Post your first internship</a>
+    </div>
   </div>
 {% endif %}
 {% endblock %}

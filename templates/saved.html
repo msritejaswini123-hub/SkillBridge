@@ -1,26 +1,31 @@
 {% extends "dash_base.html" %}
-{% from "_macros.html" import job_card %}
-{% block title %}Saved internships{% endblock %}
+{% from "_macros.html" import job_row with context %}
+{% from "_icons.html" import icon %}
+{% block title %}Saved{% endblock %}
 
 {% block dash %}
-<div class="page-head">
+<div class="head">
   <div>
-    <h1>Saved internships</h1>
-    <p>Roles you bookmarked. Match scores update automatically as you add skills.</p>
+    <h1>Saved</h1>
+    <div class="head-sub">Roles you bookmarked. Match scores update as you add skills.</div>
   </div>
-  <a class="btn" href="{{ url_for('student_recommendations') }}">Find more</a>
+  <div class="head-actions">
+    <a class="btn" href="{{ url_for('student_recommendations') }}">Find more</a>
+  </div>
 </div>
 
 {% if cards %}
-  <div class="grid grid-cards">
-    {% for card in cards %}{{ job_card(card) }}{% endfor %}
+  <div class="grid cards">
+    {% for card in cards %}{{ job_row(card) }}{% endfor %}
   </div>
 {% else %}
-  <div class="empty">
-    <span class="empty-ico">★</span>
-    <h3>Nothing saved yet</h3>
-    <p>Press <strong>☆ Save</strong> on any internship card to keep it here.</p>
-    <a class="btn btn-primary mt2" href="{{ url_for('internships') }}">Browse internships</a>
+  <div class="panel">
+    <div class="empty">
+      {{ icon('bookmark', 28) }}
+      <h3>Nothing saved yet</h3>
+      <p>Press <strong>Save</strong> on any internship to keep it here.</p>
+      <a class="btn btn-primary" href="{{ url_for('internships') }}">Browse internships</a>
+    </div>
   </div>
 {% endif %}
 {% endblock %}

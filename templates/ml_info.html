@@ -1,148 +1,197 @@
 {% extends "base.html" %}
-{% block title %}How matching works{% endblock %}
+{% from "_icons.html" import icon %}
+{% block title %}Methodology{% endblock %}
 
 {% block content %}
-<div class="page-head">
+<div class="head">
   <div>
-    <h1>How matching works</h1>
-    <p>The whole scoring pipeline, in the open. No black boxes.</p>
+    <h1>Matching methodology</h1>
+    <div class="head-sub">The whole scoring pipeline, in the open.</div>
   </div>
 </div>
 
-<div class="card">
-  <h2>1. The rule-based engine (this is what your score is)</h2>
-  <p class="secondary">
-    Every student-internship pair is scored on five factors. Each factor produces a 0&ndash;100%
-    sub-score and a sentence explaining itself. The weighted sum is the match percentage you see.
-  </p>
-  <div class="table-scroll">
+<div class="panel">
+  <div class="panel-head">
+    <div>
+      <h2>1. The rule-based engine</h2>
+      <div class="panel-head-sub">This is what your match percentage is</div>
+    </div>
+  </div>
+  <div class="panel-body-tight">
+    <p class="t-sm secondary mb0">
+      Every student-internship pair is scored on five factors. Each produces a 0&ndash;100%
+      sub-score and a sentence explaining itself; the weighted sum is the match percentage.
+    </p>
+  </div>
+  <div class="scroll-x">
     <table class="data">
       <thead><tr><th>Factor</th><th class="num">Weight</th><th>How it is measured</th></tr></thead>
       <tbody>
         <tr>
           <td><strong>Skill match</strong></td>
           <td class="num">{{ (weights.skills * 100)|int }}%</td>
-          <td>(matched required + &frac12; × matched preferred) ÷ (all required + &frac12; × all preferred)</td>
+          <td>(matched required + &frac12; &times; matched preferred) &divide; (all required + &frac12; &times; all preferred)</td>
         </tr>
         <tr>
           <td><strong>Qualification</strong></td>
           <td class="num">{{ (weights.qualification * 100)|int }}%</td>
-          <td>Degree is 65% of this factor, branch 35%. "Any Degree" scores full marks.
+          <td>Degree is 65% of this factor, branch 35%. &ldquo;Any Degree&rdquo; scores full marks.
               B.Tech and B.E are treated as equivalents.</td>
         </tr>
         <tr>
           <td><strong>Location</strong></td>
           <td class="num">{{ (weights.location * 100)|int }}%</td>
-          <td>Exact city or a Remote role = 100%. A nearby city in the same cluster = 85%.
-              A different city = 25%.</td>
+          <td>Exact city or a remote role scores 100%. A nearby city in the same cluster 85%.
+              A different city 25%.</td>
         </tr>
         <tr>
           <td><strong>Stipend</strong></td>
           <td class="num">{{ (weights.stipend * 100)|int }}%</td>
-          <td>Meets or beats your minimum = 100%. Below it, the score is the ratio
-              (offering Rs 8,000 against a Rs 10,000 minimum = 80%).</td>
+          <td>Meets or beats your minimum scores 100%. Below it the score is the ratio &mdash;
+              an 8,000 offer against a 10,000 minimum scores 80%.</td>
         </tr>
         <tr>
           <td><strong>Experience &amp; projects</strong></td>
           <td class="num">{{ (weights.experience * 100)|int }}%</td>
-          <td>40% prior experience (6 months = full marks), 60% whether your projects mention
-              the skills or domain the role asks for.</td>
+          <td>40% prior experience (6 months is full marks), 60% whether your projects mention
+              the skills or domain asked for.</td>
         </tr>
       </tbody>
     </table>
   </div>
-  <div class="callout mt3">
-    <strong>Worked example.</strong> A B.Tech CSE student in Hyderabad expecting Rs 10,000&ndash;20,000,
-    with Python, SQL and HTML, looking at a Python Developer Intern role in Hyderabad paying
-    Rs 15,000 that requires Python, SQL and Flask:<br>
-    skills 2 of 3 = 66.7% → 33.3 pts &middot; qualification 100% → 20 pts &middot;
-    location 100% → 15 pts &middot; stipend 100% → 10 pts &middot; experience 0% → 0 pts.
-    <strong>Total 78%</strong>, with Flask listed as the missing skill.
-    Add Flask and a relevant project and the same role scores in the mid-90s.
+  <div class="panel-foot">
+    <strong>Worked example.</strong> A B.Tech CSE student in Hyderabad expecting 10,000&ndash;20,000
+    with Python, SQL and HTML, against a Python Developer Intern role in Hyderabad paying 15,000
+    that requires Python, SQL and Flask: skills 2 of 3 = 66.7% &rarr; 33.3 pts, qualification
+    100% &rarr; 20 pts, location 100% &rarr; 15 pts, stipend 100% &rarr; 10 pts, experience
+    0% &rarr; 0 pts. <strong>Total 78%</strong>, with Flask listed as missing. Add Flask and a
+    relevant project and the same role scores in the mid-90s.
   </div>
 </div>
 
-<div class="card">
-  <h2>2. The optional ML layer</h2>
+<div class="panel">
+  <div class="panel-head">
+    <div>
+      <h2>2. The optional ML layer</h2>
+      <div class="panel-head-sub">Affects ordering only, never your score</div>
+    </div>
+    {% if info.available %}
+      <span class="badge badge-ok">{{ icon('check', 12) }} Active</span>
+    {% else %}
+      <span class="badge">Disabled</span>
+    {% endif %}
+  </div>
+
   {% if info.available %}
-    <p class="secondary">
-      A second model re-orders your list. It never changes the match percentage you see &mdash;
-      that stays the transparent weighted sum above.
-    </p>
-    <div class="tiles mb3">
-      <div class="tile"><span class="tile-label">Model</span><div class="tile-value" style="font-size:1rem">Logistic Regression</div><div class="tile-foot">scikit-learn</div></div>
-      <div class="tile"><span class="tile-label">Training rows</span><div class="tile-value">{{ info.n_samples }}</div><div class="tile-foot">{{ info.n_train }} train / {{ info.n_test }} test</div></div>
-      <div class="tile"><span class="tile-label">Test accuracy</span><div class="tile-value">{{ (info.accuracy * 100)|round(1) }}%</div><div class="tile-foot">held-out split</div></div>
-      <div class="tile"><span class="tile-label">ROC AUC</span><div class="tile-value">{{ info.roc_auc }}</div><div class="tile-foot">ranking quality</div></div>
-    </div>
+    <div class="panel-body">
+      <div class="stats mb3">
+        <div class="stat">
+          <span class="stat-label">Model</span>
+          <div class="stat-value stat-value-sm">Logistic Regression</div>
+          <div class="stat-foot">scikit-learn</div>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Training rows</span>
+          <div class="stat-value">{{ info.n_samples }}</div>
+          <div class="stat-foot">{{ info.n_train }} train / {{ info.n_test }} test</div>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Test accuracy</span>
+          <div class="stat-value">{{ (info.accuracy * 100)|round(1) }}%</div>
+          <div class="stat-foot">held-out split</div>
+        </div>
+        <div class="stat">
+          <span class="stat-label">ROC AUC</span>
+          <div class="stat-value">{{ info.roc_auc }}</div>
+          <div class="stat-foot">ranking quality</div>
+        </div>
+      </div>
 
-    <div class="callout callout-warn">
-      <strong>⚠ Honest disclosure about the training data.</strong>
-      {{ info.data_note }}
-      SkillBridge is a prototype with no placement history, so there is no real
-      "was this student shortlisted?" dataset to learn from. Rather than fake one, the rows in
-      <code>ml/training_data.csv</code> are generated by a documented recruiter-behaviour model in
-      <code>ml/generate_training_data.py</code>. <strong>No real student data was used, and the
-      model's output is never presented as a real placement prediction.</strong>
-    </div>
+      <div class="note-box note-box-warn">
+        {{ icon('alert', 14) }}
+        <span>
+          <strong>The training data is synthetic.</strong> {{ info.data_note }}
+          SkillBridge is a prototype with no placement history, so there is no real
+          &ldquo;was this student shortlisted?&rdquo; dataset. Rather than invent one and imply
+          otherwise, the rows in <code>ml/training_data.csv</code> are generated from a
+          documented recruiter-behaviour model in <code>ml/generate_training_data.py</code>.
+          <strong>No real student data was used, and the output is never presented as a real
+          placement prediction.</strong>
+        </span>
+      </div>
 
-    <h3>Input features and target</h3>
-    <div class="table-scroll">
-      <table class="data">
-        <thead><tr><th>Feature</th><th class="num">Learned weight</th><th>Meaning</th></tr></thead>
-        <tbody>
-          {% set meanings = {
-            'skill_score': 'Skill coverage of the role',
-            'qualification_score': 'Degree and branch fit',
-            'location_score': 'City / remote compatibility',
-            'stipend_score': 'Stipend expectation fit',
-            'experience_score': 'Experience and project relevance',
-            'skill_x_location': 'Interaction: strong skills only convert if the student can attend',
-            'skill_squared': 'Non-linearity: shortlisting rises steeply past a skill threshold'
-          } %}
-          {% for row in info.coefficients %}
-            <tr>
-              <td><code>{{ row.feature }}</code></td>
-              <td class="num">{{ row.weight }}</td>
-              <td class="secondary">{{ meanings.get(row.feature, '') }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <h3 class="mb2">Input features and learned weights</h3>
+      <div class="scroll-x">
+        <table class="data">
+          <thead><tr><th>Feature</th><th class="num">Weight</th><th>Meaning</th></tr></thead>
+          <tbody>
+            {% set meanings = {
+              'skill_score': 'Skill coverage of the role',
+              'qualification_score': 'Degree and branch fit',
+              'location_score': 'City / remote compatibility',
+              'stipend_score': 'Stipend expectation fit',
+              'experience_score': 'Experience and project relevance',
+              'skill_x_location': 'Interaction: strong skills only convert if the student can attend',
+              'skill_squared': 'Non-linearity: shortlisting rises steeply past a skill threshold'
+            } %}
+            {% for row in info.coefficients %}
+              <tr>
+                <td><code>{{ row.feature }}</code></td>
+                <td class="num">{{ row.weight }}</td>
+                <td>{{ meanings.get(row.feature, '') }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <p class="t-sm secondary mt3">
+        <strong>Target:</strong> <code>{{ info.target }}</code> &mdash; the probability a recruiter
+        shortlists this pairing.<br>
+        <strong>Why include it:</strong> the rule engine is a straight weighted sum, so it cannot
+        express &ldquo;below a 30% skill match nothing else rescues you&rdquo; or &ldquo;a strong
+        skill match in an unreachable city is still a no&rdquo;. The squared and interaction
+        features let the regression capture both.
+      </p>
+      <p class="t-sm secondary mb0">
+        <strong>How it is combined:</strong> the ranking key is 70% rule score + 30% ML
+        probability, and it is applied only when you pick <em>AI shortlist likelihood</em> in the
+        sort control. The displayed percentage stays 100% rule-based so the breakdown always
+        adds up.
+      </p>
     </div>
-    <p class="secondary mt2">
-      <strong>Target:</strong> <code>{{ info.target }}</code> &mdash; the probability a recruiter
-      shortlists this pairing.
-      <strong>Why bother?</strong> The rule engine is a straight weighted sum, so it cannot express
-      "below a 30% skill match nothing else rescues you" or "a great skill match in an unreachable
-      city is still a no". The squared and interaction features let the regression capture both,
-      which is why it re-orders borderline matches usefully.
-    </p>
-    <p class="secondary mb0">
-      <strong>How it is combined:</strong> ranking key = 70% rule score + 30% ML probability.
-      The displayed percentage stays 100% rule-based, so the breakdown table always adds up.
-    </p>
   {% else %}
-    <div class="callout callout-warn">
-      <strong>The ML layer is currently switched off.</strong> {{ info.reason }}<br>
-      The portal is fully functional without it &mdash; recommendations are ranked by the
-      rule-based score alone. To enable it: <code>pip install scikit-learn</code>
+    <div class="panel-body">
+      <div class="note-box note-box-warn mb0">
+        {{ icon('alert', 14) }}
+        <span>
+          <strong>The ML layer is switched off.</strong> {{ info.reason }}<br>
+          The portal is fully functional without it &mdash; recommendations use the rule-based
+          score alone. To enable it: <code>pip install scikit-learn</code>
+        </span>
+      </div>
     </div>
   {% endif %}
 </div>
 
-<div class="card">
-  <h2>3. Resume parsing</h2>
-  <p class="secondary">
-    <code>pypdf</code> extracts the text of every page. That text is matched against a dictionary of
-    canonical skills with their spelling variants, using word-boundary regexes that respect
-    <code>+</code> and <code>#</code> &mdash; so <code>C</code> does not match inside "CSE", but
-    <code>C++</code> matches itself. Short names like <code>ML</code> and <code>Go</code> must appear
-    capitalised, so the English word "go" is never read as the Go language.
-  </p>
-  <p class="secondary mb0">
-    This is a dictionary lookup, not ML &mdash; which means it is predictable, debuggable, and the
-    student can always see and correct exactly what was extracted before anything is saved.
-  </p>
+<div class="panel">
+  <div class="panel-head"><h2>3. Resume parsing</h2></div>
+  <div class="panel-body">
+    <p class="t-sm secondary">
+      <code>pypdf</code> extracts the text of every page. That text is matched against a
+      dictionary of canonical skills and their spelling variants, using word-boundary regexes
+      that respect <code>+</code> and <code>#</code> &mdash; so <code>C</code> does not match
+      inside &ldquo;CSE&rdquo;, but <code>C++</code> matches itself. Short names such as
+      <code>ML</code> and <code>Go</code> must be capitalised, so the English word
+      &ldquo;go&rdquo; is never read as the Go language, and a degree code only counts when
+      written as an abbreviation, so a sentence-initial &ldquo;It&rdquo; is never read as the
+      IT branch.
+    </p>
+    <p class="t-sm secondary mb0">
+      This is a dictionary lookup, not machine learning &mdash; which is the point. It is
+      predictable, debuggable, and the student always sees and can correct exactly what was
+      extracted before anything is saved.
+    </p>
+  </div>
 </div>
 {% endblock %}

@@ -1,127 +1,152 @@
 {% extends "dash_base.html" %}
-{% from "_macros.html" import match_pill, status_badge, skill_badges, meter %}
-{% block title %}Industry dashboard{% endblock %}
+{% from "_macros.html" import score_badge, status_badge, meter with context %}
+{% from "_icons.html" import icon %}
+{% block title %}Overview{% endblock %}
 
 {% block dash %}
-<div class="page-head">
+<div class="head">
   <div>
     <h1>{{ company['company_name'] }}</h1>
-    <p>{{ company['industry'] or 'Industry not set' }}{% if company['location'] %} &middot; {{ company['location'] }}{% endif %}</p>
+    <div class="head-sub">
+      {{ company['industry'] or 'Industry not set' }}{% if company['location'] %} &middot; {{ company['location'] }}{% endif %}
+    </div>
   </div>
-  <div class="btn-row">
-    <a class="btn" href="{{ url_for('company_profile') }}">Edit profile</a>
-    <a class="btn btn-primary" href="{{ url_for('post_internship') }}">＋ Post internship</a>
+  <div class="head-actions">
+    <a class="btn" href="{{ url_for('company_profile') }}">Edit company</a>
+    <a class="btn btn-primary" href="{{ url_for('post_internship') }}">{{ icon('plus', 13) }} Post internship</a>
   </div>
 </div>
 
-<div class="tiles mb3">
-  <div class="tile">
-    <span class="tile-label">Internships posted</span>
-    <div class="tile-value">{{ totals.internships }}</div>
-    <div class="tile-foot">{{ totals.active }} currently open</div>
+<div class="stats">
+  <div class="stat">
+    <span class="stat-label">Internships</span>
+    <div class="stat-value">{{ totals.internships }}</div>
+    <div class="stat-foot">{{ totals.active }} open</div>
   </div>
-  <div class="tile">
-    <span class="tile-label">Total openings</span>
-    <div class="tile-value">{{ totals.openings }}</div>
-    <div class="tile-foot">across all roles</div>
+  <div class="stat">
+    <span class="stat-label">Openings</span>
+    <div class="stat-value">{{ totals.openings }}</div>
+    <div class="stat-foot">across all roles</div>
   </div>
-  <div class="tile">
-    <span class="tile-label">Applications</span>
-    <div class="tile-value">{{ totals.applications }}</div>
-    <div class="tile-foot"><a href="{{ url_for('company_applications') }}">Review them</a></div>
+  <div class="stat">
+    <span class="stat-label">Applications</span>
+    <div class="stat-value">{{ totals.applications }}</div>
+    <div class="stat-foot"><a href="{{ url_for('company_applications') }}">Review</a></div>
   </div>
-  <div class="tile">
-    <span class="tile-label">Shortlisted</span>
-    <div class="tile-value">{{ totals.shortlisted }}</div>
-    <div class="tile-foot">moved forward</div>
+  <div class="stat">
+    <span class="stat-label">Shortlisted</span>
+    <div class="stat-value">{{ totals.shortlisted }}</div>
+    <div class="stat-foot">moved forward</div>
   </div>
-  <div class="tile">
-    <span class="tile-label">Talent pool</span>
-    <div class="tile-value">{{ talent_pool }}</div>
-    <div class="tile-foot">students with skill profiles</div>
+  <div class="stat">
+    <span class="stat-label">Talent pool</span>
+    <div class="stat-value">{{ talent_pool }}</div>
+    <div class="stat-foot">students with skill profiles</div>
   </div>
 </div>
 
 {% if not totals.internships %}
-  <div class="empty">
-    <span class="empty-ico">📋</span>
-    <h3>Post your first internship</h3>
-    <p>List the skills you need and we will immediately rank every student in the pool against it.</p>
-    <a class="btn btn-primary btn-lg mt2" href="{{ url_for('post_internship') }}">Post an internship</a>
+  <div class="panel">
+    <div class="empty">
+      {{ icon('clipboard', 28) }}
+      <h3>Post your first internship</h3>
+      <p>List the skills you need and we will immediately rank every student in the pool against it.</p>
+      <a class="btn btn-primary" href="{{ url_for('post_internship') }}">Post an internship</a>
+    </div>
   </div>
 {% else %}
 
   <div class="grid grid-2">
-    <div class="card">
-      <div class="card-head">
-        <h2 class="mb0">Top candidates</h2>
-        {% if newest %}<a class="btn btn-sm" href="{{ url_for('company_candidates', internship_id=newest['id']) }}">See all</a>{% endif %}
-      </div>
-      {% if newest %}
-        <p class="tiny muted">Ranked for <strong>{{ newest['title'] }}</strong> &middot; {{ newest['location'] }}</p>
-        {% if top_candidates %}
-          <div class="table-scroll">
-            <table class="data">
-              <thead><tr><th>#</th><th>Student</th><th>Qualification</th><th class="num">Match</th><th>Why</th></tr></thead>
-              <tbody>
-                {% for row in top_candidates %}
-                  <tr>
-                    <td><span class="rank {{ 'rank-1' if loop.first }}">{{ loop.index }}</span></td>
-                    <td><strong>{{ row.student['name'] }}</strong><br>
-                        <span class="tiny muted">{{ row.student['preferred_location'] or '—' }}</span></td>
-                    <td class="secondary">{{ row.student['qualification'] }} {{ row.student['branch'] }}</td>
-                    <td class="num">{{ match_pill(row.match, show_ml=false) }}</td>
-                    <td class="tiny">
-                      {% if row.match.matched_required %}
-                        <span class="tick">✓</span> {{ row.match.matched_required|join(', ') }}<br>
-                      {% endif %}
-                      {% if row.match.missing_required %}
-                        <span class="cross">✗</span> <span class="muted">{{ row.match.missing_required|join(', ') }}</span>
-                      {% endif %}
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        {% else %}
-          <p class="secondary mb0">No students have skill profiles yet, so there is nothing to rank.</p>
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Top candidates</h2>
+          {% if newest %}
+            <div class="panel-head-sub">Ranked for {{ newest['title'] }} &middot; {{ newest['location'] }}</div>
+          {% endif %}
+        </div>
+        {% if newest %}
+          <a class="btn btn-sm" href="{{ url_for('company_candidates', internship_id=newest['id']) }}">See all</a>
         {% endif %}
+      </div>
+      {% if top_candidates %}
+        <div class="scroll-x">
+          <table class="data">
+            <thead><tr><th>#</th><th>Student</th><th>Qualification</th><th class="num">Match</th><th>Why</th></tr></thead>
+            <tbody>
+              {% for row in top_candidates %}
+                <tr>
+                  <td><span class="rank {{ 'rank-1' if loop.first }}">{{ loop.index }}</span></td>
+                  <td>
+                    <strong>{{ row.student['name'] }}</strong>
+                    <div class="t-xs muted">{{ row.student['preferred_location'] or '—' }}</div>
+                  </td>
+                  <td class="nowrap">{{ row.student['qualification'] }} {{ row.student['branch'] }}</td>
+                  <td class="num">{{ score_badge(row.match, show_ml=false) }}</td>
+                  <td class="t-xs">
+                    {% if row.match.matched_required %}
+                      <span class="ok-mark">{{ icon('check', 11) }}</span> {{ row.match.matched_required|join(', ') }}
+                    {% endif %}
+                    {% if row.match.missing_required %}
+                      <div class="muted"><span class="bad-mark">{{ icon('x', 11) }}</span> {{ row.match.missing_required|join(', ') }}</div>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="panel-body"><p class="muted mb0">No students have skill profiles yet.</p></div>
       {% endif %}
     </div>
 
-    <div class="card">
-      <div class="card-head"><h2 class="mb0">Your most requested skills</h2></div>
-      {% if requested_skills %}
-        <p class="tiny muted">How often each skill appears across your postings.</p>
-        {% set top = requested_skills[0].n %}
-        {% for row in requested_skills %}
-          <div class="meter-row"><span>{{ row.name }}</span><span class="mono-num tiny">{{ row.n }} posting{{ '' if row.n == 1 else 's' }}</span></div>
-          {{ meter(100 * row.n / top) }}
-        {% endfor %}
-      {% else %}
-        <p class="secondary mb0">Add skills to your postings to see this.</p>
-      {% endif %}
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Your most requested skills</h2>
+          <div class="panel-head-sub">How often each appears across your postings</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        {% if requested_skills %}
+          {% set top = requested_skills[0].n %}
+          {% for row in requested_skills %}
+            <div class="meter-row">
+              <span>{{ row.name }}</span>
+              <span class="num t-xs">{{ row.n }} posting{{ '' if row.n == 1 else 's' }}</span>
+            </div>
+            {{ meter(100 * row.n / top) }}
+          {% endfor %}
+        {% else %}
+          <p class="muted mb0">Add skills to your postings to see this.</p>
+        {% endif %}
+      </div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-head">
-      <h2 class="mb0">Your internships</h2>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Your internships</h2>
       <a class="btn btn-sm" href="{{ url_for('company_internships') }}">Manage all</a>
     </div>
-    <div class="table-scroll">
+    <div class="scroll-x">
       <table class="data">
         <thead><tr><th>Role</th><th>Location</th><th>Stipend</th><th class="num">Applicants</th><th>Status</th><th></th></tr></thead>
         <tbody>
           {% for job in internships %}
             <tr>
-              <td><a href="{{ url_for('internship_detail', internship_id=job['id']) }}"><strong>{{ job['title'] }}</strong></a>
-                  {% if job['is_demo'] %}<span class="badge badge-demo tiny">Demo</span>{% endif %}</td>
+              <td>
+                <a href="{{ url_for('internship_detail', internship_id=job['id']) }}"><strong>{{ job['title'] }}</strong></a>
+                {% if job['is_demo'] %}<span class="badge badge-demo">Demo</span>{% endif %}
+              </td>
               <td>{{ job['location'] }}</td>
               <td class="nowrap">{{ job|stipend_range }}</td>
               <td class="num">{{ job['applicant_count'] }}</td>
-              <td>{% if job['is_active'] %}<span class="badge badge-have">Open</span>{% else %}<span class="badge badge-cat">Closed</span>{% endif %}</td>
+              <td>
+                {% if job['is_active'] %}<span class="badge badge-ok">Open</span>
+                {% else %}<span class="badge">Closed</span>{% endif %}
+              </td>
               <td><a class="btn btn-sm" href="{{ url_for('company_candidates', internship_id=job['id']) }}">Candidates</a></td>
             </tr>
           {% endfor %}
@@ -130,21 +155,21 @@
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-head">
-      <h2 class="mb0">Recent applications</h2>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Recent applications</h2>
       <a class="btn btn-sm" href="{{ url_for('company_applications') }}">All applications</a>
     </div>
     {% if applications %}
-      <div class="table-scroll">
+      <div class="scroll-x">
         <table class="data">
           <thead><tr><th>Student</th><th>Role</th><th>Qualification</th><th class="num">Match</th><th>Status</th></tr></thead>
           <tbody>
             {% for app in applications %}
               <tr>
                 <td><strong>{{ app['student_name'] }}</strong></td>
-                <td class="secondary">{{ app['title'] }}</td>
-                <td>{{ app['qualification'] }} {{ app['branch'] }}</td>
+                <td>{{ app['title'] }}</td>
+                <td class="nowrap">{{ app['qualification'] }} {{ app['branch'] }}</td>
                 <td class="num">{{ app['match_score']|round|int }}%</td>
                 <td>{{ status_badge(app['status']) }}</td>
               </tr>
@@ -153,7 +178,7 @@
         </table>
       </div>
     {% else %}
-      <p class="secondary mb0">No applications yet.</p>
+      <div class="panel-body"><p class="muted mb0">No applications yet.</p></div>
     {% endif %}
   </div>
 {% endif %}

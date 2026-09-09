@@ -6,46 +6,55 @@
   <title>{% block title %}{{ app_name }}{% endblock %} &middot; {{ app_name }}</title>
   <meta name="description" content="SkillBridge - academia, industry and student skill mapping, internships and placements.">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232a78d6'/><text x='16' y='22' font-family='sans-serif' font-size='16' font-weight='bold' fill='white' text-anchor='middle'>SB</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2314171a'/><text x='16' y='22' font-family='-apple-system,sans-serif' font-size='15' font-weight='700' fill='white' text-anchor='middle'>SB</text></svg>">
 </head>
 <body>
+{% from "_icons.html" import icon %}
 
-<header class="nav">
-  <div class="nav-inner">
+<header class="topbar">
+  <div class="topbar-inner">
     <a class="brand" href="{{ url_for('index') }}">
       <span class="brand-mark">SB</span>
-      <span>SkillBridge <span class="brand-sub">Academia &middot; Industry</span></span>
+      <span>SkillBridge</span>
     </a>
 
-    <nav class="nav-links">
-      <a href="{{ url_for('internships') }}" {% if request.endpoint == 'internships' %}class="active"{% endif %}>Internships</a>
-
+    <nav class="topnav">
+      <a href="{{ url_for('internships') }}"
+         {% if request.endpoint == 'internships' %}aria-current="page"{% endif %}>Internships</a>
       {% if current_user %}
         <a href="{{ url_for('dashboard') }}">Dashboard</a>
-        <div class="nav-user">
-          <span class="avatar">{{ current_user['name'][:1]|upper }}</span>
-          <span>
-            <span style="font-size:.86rem;font-weight:600;display:block;line-height:1.2">{{ current_user['name'] }}</span>
-            <span class="role-chip">{{ user_role }}</span>
-          </span>
-          <a href="{{ url_for('logout') }}" class="btn btn-sm">Log out</a>
-        </div>
       {% else %}
-        <a href="{{ url_for('ml_info') }}">How it works</a>
-        <a href="{{ url_for('login') }}">Log in</a>
-        <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Register</a>
+        <a href="{{ url_for('ml_info') }}"
+           {% if request.endpoint == 'ml_info' %}aria-current="page"{% endif %}>How it works</a>
       {% endif %}
     </nav>
+
+    <div class="topbar-right">
+      {% if current_user %}
+        <div class="who">
+          <span class="avatar">{{ current_user['name'][:1]|upper }}</span>
+          <span class="who-text">
+            <span class="who-name">{{ current_user['name'] }}</span>
+            <span class="who-role">{{ user_role }}</span>
+          </span>
+        </div>
+        <a class="btn btn-sm" href="{{ url_for('logout') }}">{{ icon('logout', 13) }} Sign out</a>
+      {% else %}
+        <a class="btn btn-sm" href="{{ url_for('login') }}">Sign in</a>
+        <a class="btn btn-sm btn-primary" href="{{ url_for('register') }}">Create account</a>
+      {% endif %}
+    </div>
   </div>
 </header>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     <div class="flashes">
+      {% set flash_icons = {'success': 'check-circle', 'danger': 'x-circle',
+                            'warning': 'alert', 'info': 'info'} %}
       {% for category, message in messages %}
-        {% set icons = {'success': '✓', 'danger': '!', 'warning': '!', 'info': 'i'} %}
         <div class="flash flash-{{ category }}">
-          <span class="flash-icon">{{ icons.get(category, 'i') }}</span>
+          {{ icon(flash_icons.get(category, 'info'), 14) }}
           <span>{{ message }}</span>
         </div>
       {% endfor %}
@@ -57,12 +66,10 @@
   <div class="wrap">{% block content %}{% endblock %}</div>
 {% endblock %}
 
-<footer class="footer">
-  <div class="footer-inner">
-    <span><strong>SkillBridge</strong> &middot; hackathon prototype &middot; all internships, companies and students in this build are demo data</span>
-    <span>
-      <a href="{{ url_for('ml_info') }}">Matching &amp; ML explained</a>
-    </span>
+<footer class="foot">
+  <div class="foot-inner">
+    <span>SkillBridge &middot; prototype build &middot; all companies, internships and students shown are demo data</span>
+    <a href="{{ url_for('ml_info') }}">Matching &amp; ML methodology</a>
   </div>
 </footer>
 
