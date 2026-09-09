@@ -425,9 +425,10 @@ sandwich/
 ├── HOW_TO_RUN.txt               beginner-friendly single-line instructions
 │
 ├── templates/
-│   ├── base.html                navbar, flashes, footer
+│   ├── base.html                topbar, flashes, footer
 │   ├── dash_base.html           sidebar shell for all dashboards
-│   ├── _macros.html             job card, badges, meters, breakdown, chart, sort toggle
+│   ├── _macros.html             job row, badges, meters, breakdown, chart, sort toggle
+│   ├── _icons.html              inline SVG icon set (used instead of emoji)
 │   ├── _filters.html            shared filter bar
 │   ├── index.html               landing page
 │   ├── login.html   register.html   error.html   ml_info.html
@@ -454,6 +455,60 @@ sandwich/
 ├── uploads/                     student resume uploads
 └── database/portal.db           the SQLite database (created by init_db.py)
 ```
+
+## UI design
+
+The interface is deliberately built to read like an internal enterprise tool rather than a
+landing page. Six rules, all enforced in `static/css/style.css`:
+
+1. **Neutral-dominant.** A ten-step grey ramp carries the interface. Colour is reserved for
+   meaning only — application status, gap severity, and the two chart series. No gradients,
+   no tinted panels, no purple.
+2. **Hairlines, not shadows.** 1px borders separate things. Shadows are reserved for elements
+   that genuinely float.
+3. **Small radii.** 6px panels, 5px controls, 3px badges. Nothing is pill-shaped except the
+   match score, where it reads as data.
+4. **Density.** Tighter padding and 13–14px type, so more fits on screen. Hierarchy comes from
+   weight and colour, not from large type.
+5. **A 4px spacing grid**, and `tabular-nums` in every column of numbers so digits align.
+6. **Icons, never emoji.** `templates/_icons.html` holds a 45-icon inline-SVG set on a 24×24
+   grid with a 1.5px stroke, drawn with `currentColor` so an icon always matches the text
+   beside it. Emoji were removed entirely: they render differently on every OS, can't inherit
+   colour or stroke weight, and sit on the baseline at the wrong size.
+
+The primary button is near-black rather than blue, which keeps blue meaning "link or data".
+
+**Charts** are plain `div`s — no chart library, no CDN, works offline. The two series colours
+(`#2a78d6` blue, `#eb6834` orange) were validated for colour-blind separation: worst-pair
+ΔE 24.7 under protanopia, 32.7 under tritanopia, both far above the ≥8 threshold. Bars are
+10px with a 3px rounded data-end and a 2px gap between the pair; values live in their own
+column so no label can be clipped; a zero value draws no bar at all rather than a misleading
+sliver. Every severity flag is an icon **and** a word, so nothing depends on colour alone, and
+the academia chart has a full table view beside it.
+
+## Deployment
+
+The app runs on any host that can run a long-lived Python process with a writable filesystem
+(Render, Railway, Fly.io, PythonAnywhere). It is **not** suitable for serverless hosts such as
+Vercel: resume uploads and SQLite both need a real filesystem.
+
+```
+Build command:  pip install -r requirements-render.txt
+Start command:  gunicorn app:app --bind 0.0.0.0:$PORT
+Env var:        SKILLBRIDGE_SECRET = <a long random string>
+```
+
+* `--bind 0.0.0.0:$PORT` is required — gunicorn's default `127.0.0.1:8000` is unreachable from
+  outside the container.
+* `requirements-render.txt` omits scikit-learn, because a 512 MB free instance is tight for
+  scipy/numpy. The ML layer degrades gracefully, so everything else is identical. Use the full
+  `requirements.txt` on a larger instance if you want ML enabled.
+* On a fresh instance the database does not exist yet. A one-shot `before_request` hook in
+  `app.py` creates the tables and demo data on the first request, so the site never serves
+  `no such table`.
+* **On an ephemeral filesystem your data resets on every redeploy.** The demo data re-seeds
+  automatically so the demo always works, but anything a visitor types is lost on restart.
+  Persisting real data means moving to Postgres.
 
 ## Security measures implemented
 

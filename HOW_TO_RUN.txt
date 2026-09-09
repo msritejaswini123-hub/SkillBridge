@@ -9,10 +9,15 @@ no MongoDB. Just copy-paste the lines below, one at a time.
 ----------------------------------------------------------
  STEP 0 - OPEN THE PROJECT
 ----------------------------------------------------------
-Open this folder in VS Code, then open a terminal inside it:
+IF YOU GOT THIS AS A ZIP: extract it first!
+Windows lets you look inside a .zip like a normal folder, but
+the app cannot create its database in there. Right-click the
+zip -> "Extract All..." -> then use the extracted folder.
+
+Open that folder in VS Code, then open a terminal inside it:
    View  ->  Terminal      (or press  Ctrl + `  )
 
-Make sure the terminal says you are inside the "sandwich" folder.
+Make sure the terminal says you are inside the project folder.
 
 
 ----------------------------------------------------------
@@ -35,11 +40,19 @@ Windows:
 Mac / Linux:
    source venv/bin/activate
 
-Windows:
+Windows, Command Prompt (cmd):
    venv\Scripts\activate
+
+Windows, PowerShell:
+   .\venv\Scripts\Activate.ps1
 
 You will now see (venv) at the start of your terminal line.
 That is how you know it worked.
+
+PowerShell says "running scripts is disabled on this system"?
+   Run this once in the same window, then try again:
+      Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+   Or simply use Command Prompt instead - it has no such restriction.
 
 
 ----------------------------------------------------------
@@ -117,8 +130,15 @@ Only PDF files are accepted, max size 5 MB.
 ==========================================================
  IF SOMETHING GOES WRONG
 ==========================================================
-"command not found: python"
+"command not found: python"   (Mac / Linux)
    -> type  python3  instead of  python
+
+"'python' is not recognized..."   (Windows)
+   -> Python is not on your PATH. Use the launcher instead:
+         py -m venv venv
+         py init_db.py
+         py app.py
+      Or reinstall Python and TICK "Add python.exe to PATH".
 
 "No module named flask"
    -> the venv is off. Go back to STEP 2, then STEP 3.

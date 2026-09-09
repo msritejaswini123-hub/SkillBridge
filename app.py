@@ -69,6 +69,38 @@ def close_db(_exception):
         conn.close()
 
 
+# Guard so the check below runs once per process, not on every request.
+_DB_READY = {"done": False}
+
+
+@app.before_request
+def ensure_database_ready():
+    """
+    Create the tables and demo data on the first request if they are missing.
+
+    Running locally you use `python init_db.py`, so this does nothing. It exists
+    for hosted/ephemeral filesystems (Render, Railway, Docker) where the SQLite
+    file does not survive a restart - without it the site would serve
+    "no such table: users" after every redeploy.
+
+    Both steps are idempotent: CREATE TABLE IF NOT EXISTS, and the seed is
+    skipped when any user already exists.
+    """
+    if _DB_READY["done"]:
+        return
+    _DB_READY["done"] = True
+    try:
+        import seed_data
+        db.init_db()
+        conn = get_db()
+        if not seed_data.is_seeded(conn):
+            app.logger.info("Empty database detected - inserting demo data.")
+            seed_data.seed(conn, verbose=False)
+    except Exception:
+        # Log it for the host's console; the error pages handle the user side.
+        app.logger.exception("Could not prepare the database")
+
+
 # ===========================================================================
 # AUTH HELPERS
 # ===========================================================================
@@ -421,7 +453,8 @@ def student_dashboard():
     profile = student_profile_or_404()
     skills = db.student_skill_names(conn, profile["id"])
 
-    recommendations = recommend_for_student(conn, profile, limit=4) if skills else []
+    # 3, not 4: the card grid is 3 columns at desktop width, so 4 leaves an orphan.
+    recommendations = recommend_for_student(conn, profile, limit=3) if skills else []
     if skills:
         # Recompute the cached gaps from the full ranked list.
         refresh_skill_gaps(conn, profile["id"], recommend_for_student(conn, profile))
@@ -584,6 +617,7 @@ def student_resume():
         "resume.html", profile=profile,
         skills=db.student_skill_names(conn, profile["id"]),
         max_mb=MAX_UPLOAD_BYTES // (1024 * 1024),
+        library_size=len(rp.all_skill_names()),
         sample_exists=os.path.exists(os.path.join(BASE_DIR, "sample_data", "sample_resume.pdf")),
     )
 
